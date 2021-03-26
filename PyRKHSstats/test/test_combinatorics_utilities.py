@@ -2,7 +2,8 @@ import pytest
 
 from numpy import isclose
 
-from combinatorics_utilities import n_permute_m, ordered_combinations
+from PyRKHSstats.combinatorics_utilities import n_permute_m, \
+    ordered_combinations
 
 
 @pytest.mark.parametrize(

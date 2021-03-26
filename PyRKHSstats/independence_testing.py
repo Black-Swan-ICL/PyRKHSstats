@@ -1,4 +1,4 @@
-from gamma_approximation import calibrate_gamma
+from PyRKHSstats.gamma_approximation import calibrate_gamma
 
 # TODO make into a class to make easy to perists (text output, bespoke
 #  serialisation etc)

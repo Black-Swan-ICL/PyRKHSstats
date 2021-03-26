@@ -5,8 +5,8 @@ from math import sqrt, log
 
 from sklearn.gaussian_process.kernels import RBF, DotProduct
 
-from hsic import compute_squared_norm_mean_embedding, biased_hsic
-from kernel_wrapper import KernelWrapper
+from PyRKHSstats.hsic import compute_squared_norm_mean_embedding, biased_hsic
+from PyRKHSstats.kernel_wrapper import KernelWrapper
 
 
 @pytest.mark.parametrize(

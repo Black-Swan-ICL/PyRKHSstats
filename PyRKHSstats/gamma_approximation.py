@@ -4,7 +4,7 @@
 
 from scipy.stats import gamma
 
-from hsic import compute_estimate_biased_hsic_mean, \
+from PyRKHSstats.hsic import compute_estimate_biased_hsic_mean, \
     compute_estimate_biased_hsic_variance
 
 

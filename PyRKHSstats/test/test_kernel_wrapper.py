@@ -4,7 +4,7 @@ import numpy as np
 from math import log, sqrt
 from sklearn.gaussian_process.kernels import RBF
 
-from kernel_wrapper import KernelWrapper
+from PyRKHSstats.kernel_wrapper import KernelWrapper
 
 
 observations_1 = np.asarray([[1], [1], [sqrt(2 * log(2)) + 1]])

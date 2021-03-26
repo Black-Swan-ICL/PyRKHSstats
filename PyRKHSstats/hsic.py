@@ -4,9 +4,10 @@
 # (NIPS # 21, 2007) which will be referred to as 'the paper' in the module.
 import numpy as np
 
-from combinatorics_utilities import n_permute_m, ordered_combinations
+from PyRKHSstats.combinatorics_utilities import n_permute_m, \
+    ordered_combinations
 
-from kernel_wrapper import KernelWrapper
+from PyRKHSstats.kernel_wrapper import KernelWrapper
 
 
 def compute_squared_norm_mean_embedding(data, kernel):

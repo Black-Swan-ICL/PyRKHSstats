@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm, gamma
 from sklearn.gaussian_process.kernels import RBF
 
-from kernel_wrapper import KernelWrapper
-from hsic import biased_hsic
+from PyRKHSstats.kernel_wrapper import KernelWrapper
+from PyRKHSstats.hsic import biased_hsic
 
 
 if __name__ == "__main__":
