@@ -16,9 +16,13 @@ setup(
     author_email='kmh.pro@protonmail.com',
     license='GNU General Public License v3.0',
     classifiers=[
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.8',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: Financial and Insurance Industry',
     ],
     packages=find_packages(),
     install_requires=['numpy', 'scipy', 'scikit-learn', 'pytest']
