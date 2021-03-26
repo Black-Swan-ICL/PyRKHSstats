@@ -21,5 +21,5 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     packages=find_packages(),
-    install_requires=['numpy', 'scipy', 'pandas', 'pytest']
+    install_requires=['numpy', 'scipy', 'scikit-learn', 'pytest']
 )
