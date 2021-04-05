@@ -1,6 +1,26 @@
 import numpy as np
+import copy
+import pandas as pd
 
 import GPy
+
+
+# TODO put somewhere else
+# TODO document
+# TODO test
+def to_numpy_array(x):
+    x = copy.deepcopy(x)
+    if isinstance(x, np.ndarray):
+        res = x
+    elif isinstance(x, list):
+        res = np.asarray(x)
+    elif isinstance(x, pd.core.series.Series):
+        res = x.values
+    else:
+        msg = "x must a list, a numpy array or a pandas series !"
+        raise TypeError(msg)
+
+    return res
 
 
 # TODO document
@@ -11,6 +31,15 @@ def two_stage_gp_resit(variable_x, variable_y, variable_z, locations_s,
                        independence_test_func, kernel_x_on_s=GPy.kern.RBF,
                        kernel_y_on_s=GPy.kern.RBF, kernel_z_on_s=GPy.kern.RBF,
                        kernel_x_on_z=GPy.kern.RBF, kernel_y_on_z=GPy.kern.RBF):
+
+    # TODO check same lengths for the variables
+
+    def reformat(x):
+
+        if len(x) == 2:
+            return x
+        else:
+            return np.reshape(x, (x.shape[0], 1))
 
     def gp_regression(x, y, kernel):
 
@@ -30,6 +59,11 @@ def two_stage_gp_resit(variable_x, variable_y, variable_z, locations_s,
         res_z_on_s = gp_regression(s, z, kern_z_on_s)
 
         return res_x_on_s, res_y_on_s, res_z_on_s
+
+    variable_x = reformat(to_numpy_array(variable_x))
+    variable_y = reformat(to_numpy_array(variable_y))
+    variable_z = reformat(to_numpy_array(variable_z))
+    locations_s = reformat(to_numpy_array(locations_s))
 
     if locations_s is None:
         res_x = variable_x

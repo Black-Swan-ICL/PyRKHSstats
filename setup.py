@@ -25,5 +25,5 @@ setup(
         'Intended Audience :: Financial and Insurance Industry',
     ],
     packages=find_packages(),
-    install_requires=['numpy', 'scipy', 'scikit-learn', 'pytest']
+    install_requires=['numpy', 'scipy', 'scikit-learn', 'pytest', 'GPy']
 )
