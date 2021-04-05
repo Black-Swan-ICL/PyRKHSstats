@@ -7,10 +7,10 @@ import GPy
 # TODO test
 # TODO, why input dim = 1 ? Make more general
 # TODO should independence_test_func enclose the test level ?
-def gp_double_resit(variable_x, variable_y, variable_z, locations_s, test_level,
-                    independence_test_func, kernel_x_on_s=GPy.kern.RBF,
-                    kernel_y_on_s=GPy.kern.RBF, kernel_z_on_s=GPy.kern.RBF,
-                    kernel_x_on_z=GPy.kern.RBF, kernel_y_on_z=GPy.kern.RBF):
+def two_stage_gp_resit(variable_x, variable_y, variable_z, locations_s,
+                       independence_test_func, kernel_x_on_s=GPy.kern.RBF,
+                       kernel_y_on_s=GPy.kern.RBF, kernel_z_on_s=GPy.kern.RBF,
+                       kernel_x_on_z=GPy.kern.RBF, kernel_y_on_z=GPy.kern.RBF):
 
     def gp_regression(x, y, kernel):
 
