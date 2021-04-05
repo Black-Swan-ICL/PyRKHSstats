@@ -1,26 +1,8 @@
 import numpy as np
-import copy
-import pandas as pd
 
 import GPy
 
-
-# TODO put somewhere else
-# TODO document
-# TODO test
-def to_numpy_array(x):
-    x = copy.deepcopy(x)
-    if isinstance(x, np.ndarray):
-        res = x
-    elif isinstance(x, list):
-        res = np.asarray(x)
-    elif isinstance(x, pd.core.series.Series):
-        res = x.values
-    else:
-        msg = "x must a list, a numpy array or a pandas series !"
-        raise TypeError(msg)
-
-    return res
+from PyRKHSstats.data_handling import to_numpy_array
 
 
 # TODO document
