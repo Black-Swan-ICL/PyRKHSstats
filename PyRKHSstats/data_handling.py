@@ -1,3 +1,4 @@
+# TODO use OOP approach ? Or leave as just a module ?
 import copy
 
 import numpy as np
