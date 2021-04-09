@@ -7,13 +7,48 @@ from PyRKHSstats.data_handling import to_numpy_array
 
 # TODO document
 # TODO test
-# TODO, why input dim = 1 ? Make more general
-# TODO should independence_test_func enclose the test level ?
+# TODO, why input dim = 1 ? Make more general. Locations could well be multidim
 def two_stage_gp_resit(variable_x, variable_y, variable_z, locations_s,
                        independence_test_func, kernel_x_on_s=GPy.kern.RBF,
                        kernel_y_on_s=GPy.kern.RBF, kernel_z_on_s=GPy.kern.RBF,
                        kernel_x_on_z=GPy.kern.RBF, kernel_y_on_z=GPy.kern.RBF):
+    """Uses GP regression for non-i.i.d. conditional independence testing.
 
+    The method was developed by S. R. Flaxman, D. B. Neill and A. J. Smola in
+    [1]_.and assumes the noise models are additive throughout. Regression is
+    (optionally) first carried out on a set of locations :math:`S` to eliminate
+    potential temporal/spatial/network dependency between the variables
+    :math:`X, Y, Z`. A second round of Gaussian Regression is performed to
+    reduce conditional independence testing of :math:`X` and :math:`Y` given
+    :math:`Z` to a problem of unconditional independence testing.
+
+    Parameters
+    ----------
+    variable_x : array_like
+    variable_y : array_like
+    variable_z : array_like
+    locations_s : array_like
+    independence_test_func : callable
+    kernel_x_on_s
+    kernel_y_on_s
+    kernel_z_on_s
+    kernel_x_on_z
+    kernel_y_on_z
+
+    Returns
+    -------
+    bool
+        Whether :math:`X` and :math:`Y` are conditionally independent given
+        :math:`Z` (and :math:`S`).
+
+    Notes
+    -----
+    .. [1] Flaxman, S. R., Neill, D. B. and Smola, A. J. "Gaussian Processes for
+    Independence Tests with Non-iid Data in Causal Inference". *ACM Transactions
+    on Intelligent Systems and Technology*, volume 7, no. 2, article 22,
+    November 2015.
+
+    """
     # TODO check same lengths for the variables
 
     def reformat(x):

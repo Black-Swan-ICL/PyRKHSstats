@@ -1,3 +1,4 @@
+# TODO reformat docstrings
 from itertools import permutations, combinations, chain
 
 import numpy as np

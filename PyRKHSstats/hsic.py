@@ -1,3 +1,4 @@
+# TODO reformat docstrings
 # This module contains the code to compute the HSIC and related quantities,
 # using the tools developed in 'A Kernel Statistical Test of Independence', A.
 # Gretton, K. Fukumizu, C. Hui Teo, L. Song, B. Scholkopf & A. J. Smola

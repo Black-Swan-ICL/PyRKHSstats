@@ -1,8 +1,8 @@
-from PyRKHSstats.gamma_approximation import calibrate_gamma
-
-# TODO make into a class to make easy to perists (text output, bespoke
+# TODO make into a class to make easy to persist (text output, bespoke
 #  serialisation etc)
 # TODO add computation time ?
+# TODO reformat docstrings
+from PyRKHSstats.gamma_approximation import calibrate_gamma
 
 
 def hsic_independence_test(data_x, data_y, kernel_k, kernel_l, hsic_func,

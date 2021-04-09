@@ -1,3 +1,4 @@
+# TODO reformat docstrings
 # Tools to perform the Gamma approximation for HSIC, as described in 'A Kernel
 # Statistical Test of Independence', A. Gretton, K. Fukumizu, C. Hui Teo,
 # L. Song, B. Scholkopf & A. J. Smola (NIPS # 21, 2007)
