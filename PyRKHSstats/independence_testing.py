@@ -5,6 +5,7 @@
 from PyRKHSstats.gamma_approximation import calibrate_gamma
 
 
+# TODO add the p-value !
 def hsic_independence_test(data_x, data_y, kernel_k, kernel_l, hsic_func,
                            test_level):
     """
