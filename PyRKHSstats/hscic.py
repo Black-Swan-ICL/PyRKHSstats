@@ -145,31 +145,35 @@ if __name__ == '__main__':
     def func_vec_k_Z(z):
         return vec_k_Z(z, Z, kernel_z)
 
-    hscic_values = np.zeros_like(eval_points)
-    hscic_values[:] = np.nan
+    hscic_values_1 = np.zeros_like(eval_points)
+    hscic_values_1[:] = np.nan
     for i in range(nb_eval_points):
-        hscic_values[i] = hscic(z=eval_points[i],
+        hscic_values_1[i] = hscic(z=eval_points[i],
                                 mat_K_X=mat_K_X,
                                 mat_K_Y=mat_K_Y,
                                 mat_W=mat_W,
                                 func_vec_k_Z=func_vec_k_Z)
-    plt.scatter(eval_points, hscic_values)
+    mat_K_Y_dep_add = kernel_y.compute_kernelised_gram_matrix(Y_dep_add)
+    hscic_values_2 = np.zeros_like(eval_points)
+    hscic_values_2[:] = np.nan
+    for i in range(nb_eval_points):
+        hscic_values_2[i] = hscic(z=eval_points[i],
+                                mat_K_X=mat_K_X,
+                                mat_K_Y=mat_K_Y_dep_add,
+                                mat_W=mat_W,
+                                func_vec_k_Z=func_vec_k_Z)
+    mat_K_Yprime_dep_add = kernel_y.compute_kernelised_gram_matrix(
+        Yprime_dep_add
+    )
+    hscic_values_3 = np.zeros_like(eval_points)
+    hscic_values_3[:] = np.nan
+    for i in range(nb_eval_points):
+        hscic_values_3[i] = hscic(z=eval_points[i],
+                                mat_K_X=mat_K_X,
+                                mat_K_Y=mat_K_Yprime_dep_add,
+                                mat_W=mat_W,
+                                func_vec_k_Z=func_vec_k_Z)
+    plt.scatter(eval_points, hscic_values_1)
+    plt.scatter(eval_points, hscic_values_2)
+    plt.scatter(eval_points, hscic_values_3)
     plt.show()
-    # hscic_value = hscic(z=0.,
-    #                     data_x=X,
-    #                     data_y=Y_dep_add,
-    #                     data_z=Z,
-    #                     kernel_x=kernel_x,
-    #                     kernel_y=kernel_y,
-    #                     kernel_z=kernel_z,
-    #                     regularisation_cst=regularisation_cst)
-    # print(hscic_value)
-    # hscic_value = hscic(z=0.,
-    #                     data_x=X,
-    #                     data_y=Yprime_dep_add,
-    #                     data_z=Z,
-    #                     kernel_x=kernel_x,
-    #                     kernel_y=kernel_y,
-    #                     kernel_z=kernel_z,
-    #                     regularisation_cst=regularisation_cst)
-    # print(hscic_value)
