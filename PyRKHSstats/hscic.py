@@ -19,18 +19,10 @@ def vec_k_Z(z, data_z, kernel_z):
 
 
 # TODO replace the np.matmul by the '@' operator
-def hscic(z, data_x, data_y, data_z, kernel_x, kernel_y, kernel_z,
-          regularisation_cst):
-
-    # Compute the kernelised Gram matrices
-    mat_K_X = kernel_x.compute_kernelised_gram_matrix(data_x)
-    mat_K_Y = kernel_y.compute_kernelised_gram_matrix(data_y)
-    mat_K_Z = kernel_z.compute_kernelised_gram_matrix(data_z)
+def hscic(z, mat_K_X, mat_K_Y, mat_W, func_vec_k_Z):
 
     n = mat_K_X.shape[0]
-
-    mat_W = np.linalg.inv(mat_K_Z + n * regularisation_cst * np.identity(n))
-    vec_k_Z_in_z = vec_k_Z(z, data_z, kernel_z)
+    vec_k_Z_in_z = func_vec_k_Z(z)
 
     term_1 = np.matmul(
         np.transpose(vec_k_Z_in_z),
@@ -110,7 +102,7 @@ if __name__ == '__main__':
 
     sample_size = 500
     regularisation_cst = 0.01
-    length_scale = 0.1
+    length_scale = 0.1 ** (-0.5)
     kernel_x = KernelWrapper(RBF(length_scale=length_scale))
     kernel_y = KernelWrapper(RBF(length_scale=length_scale))
     kernel_z = KernelWrapper(RBF(length_scale=length_scale))
@@ -142,30 +134,42 @@ if __name__ == '__main__':
     plt.savefig('Figure3a.png')
     plt.close()
     # Figure 3 (b)
-    hscic_value = hscic(z=0.,
-                        data_x=X,
-                        data_y=Y_noise,
-                        data_z=Z,
-                        kernel_x=kernel_x,
-                        kernel_y=kernel_y,
-                        kernel_z=kernel_z,
-                        regularisation_cst=regularisation_cst)
-    print(hscic_value)
-    hscic_value = hscic(z=0.,
-                        data_x=X,
-                        data_y=Y_dep_add,
-                        data_z=Z,
-                        kernel_x=kernel_x,
-                        kernel_y=kernel_y,
-                        kernel_z=kernel_z,
-                        regularisation_cst=regularisation_cst)
-    print(hscic_value)
-    hscic_value = hscic(z=0.,
-                        data_x=X,
-                        data_y=Yprime_dep_add,
-                        data_z=Z,
-                        kernel_x=kernel_x,
-                        kernel_y=kernel_y,
-                        kernel_z=kernel_z,
-                        regularisation_cst=regularisation_cst)
-    print(hscic_value)
+    nb_eval_points = 100
+    eval_points = np.linspace(start=-2, stop=2, num=nb_eval_points)
+
+    mat_K_X = kernel_x.compute_kernelised_gram_matrix(X)
+    mat_K_Y = kernel_y.compute_kernelised_gram_matrix(Y_noise)
+    mat_K_Z = kernel_z.compute_kernelised_gram_matrix(Z)
+    n = mat_K_X.shape[0]
+    mat_W = np.linalg.inv(mat_K_Z + n * regularisation_cst * np.identity(n))
+    def func_vec_k_Z(z):
+        return vec_k_Z(z, Z, kernel_z)
+
+    hscic_values = np.zeros_like(eval_points)
+    hscic_values[:] = np.nan
+    for i in range(nb_eval_points):
+        hscic_values[i] = hscic(z=eval_points[i],
+                                mat_K_X=mat_K_X,
+                                mat_K_Y=mat_K_Y,
+                                mat_W=mat_W,
+                                func_vec_k_Z=func_vec_k_Z)
+    plt.scatter(eval_points, hscic_values)
+    plt.show()
+    # hscic_value = hscic(z=0.,
+    #                     data_x=X,
+    #                     data_y=Y_dep_add,
+    #                     data_z=Z,
+    #                     kernel_x=kernel_x,
+    #                     kernel_y=kernel_y,
+    #                     kernel_z=kernel_z,
+    #                     regularisation_cst=regularisation_cst)
+    # print(hscic_value)
+    # hscic_value = hscic(z=0.,
+    #                     data_x=X,
+    #                     data_y=Yprime_dep_add,
+    #                     data_z=Z,
+    #                     kernel_x=kernel_x,
+    #                     kernel_y=kernel_y,
+    #                     kernel_z=kernel_z,
+    #                     regularisation_cst=regularisation_cst)
+    # print(hscic_value)
