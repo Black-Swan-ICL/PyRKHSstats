@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -90,7 +91,7 @@ def hscic(z, mat_K_X, mat_K_Y, mat_W, func_vec_k_Z):
         ),
     )
 
-    res = term_1 - 2 * term_2 + term_3
+    res = math.sqrt(term_1 - 2 * term_2 + term_3)
 
     return res
 
@@ -134,8 +135,8 @@ if __name__ == '__main__':
     plt.savefig('Figure3a.png')
     plt.close()
     # Figure 3 (b)
-    nb_eval_points = 100
-    eval_points = np.linspace(start=-2, stop=2, num=nb_eval_points)
+    nb_eval_points = 1000
+    eval_points = np.linspace(start=-20, stop=20, num=nb_eval_points)
 
     mat_K_X = kernel_x.compute_kernelised_gram_matrix(X)
     mat_K_Y = kernel_y.compute_kernelised_gram_matrix(Y_noise)
@@ -173,7 +174,26 @@ if __name__ == '__main__':
                                 mat_K_Y=mat_K_Yprime_dep_add,
                                 mat_W=mat_W,
                                 func_vec_k_Z=func_vec_k_Z)
-    plt.scatter(eval_points, hscic_values_1)
-    plt.scatter(eval_points, hscic_values_2)
-    plt.scatter(eval_points, hscic_values_3)
-    plt.show()
+    plt.scatter(
+        eval_points,
+        hscic_values_1,
+        c='orange',
+        label='HSCIC(X, Y_noise | Z)'
+    )
+    plt.scatter(
+        eval_points,
+        hscic_values_2,
+        c='green',
+        label='HSCIC(X, Y_dep_add | Z)'
+    )
+    plt.scatter(
+        eval_points,
+        hscic_values_3,
+        c='red',
+        label="HSCIC(X, Y'_dep_add | Z)"
+    )
+    plt.legend(loc='best')
+    plt.xlabel('z')
+    plt.title('HSCIC values')
+    plt.savefig('Figure3b.png')
+    plt.close()
