@@ -2,6 +2,7 @@
 # in 'An Adaptive Test of Independence with Analytic Kernel Embeddings', W.
 # Jitkrittum, Z. Szab\'{o} & A. Gretton (ICML # 34, 2017) which will be referred
 # to as 'the paper' in the module.
+# TODO debug - the limit distribution does not appear as a Chi2(J) !
 import numpy as np
 
 
@@ -34,6 +35,7 @@ def normalised_fsic(data_x, data_y, test_points_v, test_points_w, kernel_k,
         The estimate of the NFSIC.
     """
     n = data_x.shape[0]
+    J = test_points_v.shape[0]
 
     # Compute the cross (test points, observations) kernel matrices
     mat_K = kernel_k.compute_rectangular_kernel_matrix(test_points_v, data_x)
@@ -53,7 +55,7 @@ def normalised_fsic(data_x, data_y, test_points_v, test_points_w, kernel_k,
     mat_gamma = np.multiply(term_K_H, term_L_H) - biased_u_hat @ np.ones((1, n))
     sigma_hat = (1 / n) * mat_gamma @ np.transpose(mat_gamma)
 
-    reg_concentration_mat = np.inverse(sigma_hat + gamma * np.identity(n))
+    reg_concentration_mat = np.linalg.inv(sigma_hat + gamma * np.identity(J))
 
     nfsic = n * np.transpose(u_hat) @ reg_concentration_mat @ u_hat
 
