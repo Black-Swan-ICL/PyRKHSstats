@@ -78,3 +78,30 @@ class KernelWrapper:
             kernelised_gram_matrix = self.kernel.__call__(data, data)
 
         return kernelised_gram_matrix
+
+    def compute_rectangular_kernel_matrix(self, x, y):
+        """
+        Given observations with different sizes, computes the rectangular
+        kernel matrix (kernel(data[i], data[j]))_{i, j}.
+
+        Parameters
+        ----------
+        x : array_like
+            The observations in the first space.
+        y : array_like
+            The observations in the second space.
+
+        Returns
+        -------
+        array_like
+            The rectangular kernel matrix.
+        """
+        m = len(x)
+        n = len(y)
+        kernel_matrix = np.empty((m, n), dtype=np.double)
+
+        for i in range(m):
+            for j in range(n):
+                kernel_matrix[i, j] = self.evaluate(x[i], y[j])
+
+        return kernel_matrix
