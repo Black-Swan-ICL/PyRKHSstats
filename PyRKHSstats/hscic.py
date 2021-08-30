@@ -19,77 +19,19 @@ def vec_k_Z(z, data_z, kernel_z):
     return res
 
 
-# TODO replace the np.matmul by the '@' operator
-def hscic(z, mat_K_X, mat_K_Y, mat_W, func_vec_k_Z):
+# TODO does not work
+def hscic(z, mat_K_X, mat_K_Y, hadamard_K_X_K_Y, mat_W, func_vec_k_Z):
 
-    n = mat_K_X.shape[0]
-    vec_k_Z_in_z = func_vec_k_Z(z)
+    k_Z_in_z = func_vec_k_Z(z)
 
-    term_1 = np.matmul(
-        np.transpose(vec_k_Z_in_z),
-        np.matmul(
-            mat_W,
-            np.matmul(
-                np.multiply(mat_K_X, mat_K_Y),
-                np.matmul(
-                    np.transpose(mat_W),
-                    vec_k_Z_in_z
-                )
-            )
-        )
-    )
+    # Avoid repeated matrix computations
+    k_Z_in_z_W = k_Z_in_z.T @ mat_W
+    K_X_k_Z_in_z_W = mat_K_X @ k_Z_in_z_W.T
+    K_Y_k_Z_in_z_W = mat_K_Y @ k_Z_in_z_W.T
 
-    term_2 = np.matmul(
-        np.transpose(vec_k_Z_in_z),
-        np.matmul(
-            mat_W,
-            np.multiply(
-                np.matmul(
-                    mat_K_X,
-                    np.matmul(
-                        np.transpose(mat_W),
-                        vec_k_Z_in_z
-                    )
-                ),
-                np.matmul(
-                    mat_K_Y,
-                    np.matmul(
-                        np.transpose(mat_W),
-                        vec_k_Z_in_z
-                    )
-                )
-            )
-        )
-    )
-
-    term_3 = np.matmul(
-        np.matmul(
-            np.transpose(vec_k_Z_in_z),
-            np.matmul(
-                mat_W,
-                np.matmul(
-                    mat_K_X,
-                    np.matmul(
-                        np.transpose(mat_W),
-                        vec_k_Z_in_z
-                    )
-                )
-            )
-        ),
-        np.matmul(
-            np.transpose(vec_k_Z_in_z),
-            np.matmul(
-                mat_W,
-                np.matmul(
-                    mat_K_Y,
-                    np.matmul(
-                        np.transpose(mat_W),
-                        vec_k_Z_in_z
-                    )
-                )
-            )
-        ),
-    )
+    term_1 = k_Z_in_z_W @ hadamard_K_X_K_Y @ k_Z_in_z_W.T
+    term_2 = k_Z_in_z_W @ np.multiply(K_X_k_Z_in_z_W, K_Y_k_Z_in_z_W)
+    term_3 = (k_Z_in_z_W @ K_X_k_Z_in_z_W) * (k_Z_in_z_W @ K_Y_k_Z_in_z_W)
 
     res = math.sqrt(term_1 - 2 * term_2 + term_3)
 
@@ -100,7 +42,7 @@ if __name__ == '__main__':
 
     # Reproducing the figures from 'A Measure-Theoretic Approach to Kernel
     # Conditional Mean Embedding' (J. Park, K.Muandet arXiv:2002.03689v8).
-
+    np.random.seed(22)
     sample_size = 500
     regularisation_cst = 0.01
     length_scale = 0.1 ** (-0.5)
@@ -132,7 +74,7 @@ if __name__ == '__main__':
     plt.xlabel('z')
     plt.ylabel('x, y')
     plt.title('Simulated Data - Additive Noise')
-    plt.savefig('Figure3a.png')
+    plt.savefig('Figure3a_old.png')
     plt.close()
     # Figure 3 (b)
     nb_eval_points = 1000
@@ -146,34 +88,44 @@ if __name__ == '__main__':
     def func_vec_k_Z(z):
         return vec_k_Z(z, Z, kernel_z)
 
+    # First example
+    hadamard_K_X_K_Y = np.multiply(mat_K_X, mat_K_Y)
     hscic_values_1 = np.zeros_like(eval_points)
     hscic_values_1[:] = np.nan
     for i in range(nb_eval_points):
         hscic_values_1[i] = hscic(z=eval_points[i],
-                                mat_K_X=mat_K_X,
-                                mat_K_Y=mat_K_Y,
-                                mat_W=mat_W,
-                                func_vec_k_Z=func_vec_k_Z)
+                                  mat_K_X=mat_K_X,
+                                  mat_K_Y=mat_K_Y,
+                                  hadamard_K_X_K_Y=hadamard_K_X_K_Y,
+                                  mat_W=mat_W,
+                                  func_vec_k_Z=func_vec_k_Z)
+    # Second example
     mat_K_Y_dep_add = kernel_y.compute_kernelised_gram_matrix(Y_dep_add)
+    hadamard_K_X_K_Y_dep_add = np.multiply(mat_K_X, mat_K_Y_dep_add)
     hscic_values_2 = np.zeros_like(eval_points)
     hscic_values_2[:] = np.nan
     for i in range(nb_eval_points):
         hscic_values_2[i] = hscic(z=eval_points[i],
-                                mat_K_X=mat_K_X,
-                                mat_K_Y=mat_K_Y_dep_add,
-                                mat_W=mat_W,
-                                func_vec_k_Z=func_vec_k_Z)
+                                  mat_K_X=mat_K_X,
+                                  mat_K_Y=mat_K_Y_dep_add,
+                                  hadamard_K_X_K_Y=hadamard_K_X_K_Y_dep_add,
+                                  mat_W=mat_W,
+                                  func_vec_k_Z=func_vec_k_Z)
+    # Third example
     mat_K_Yprime_dep_add = kernel_y.compute_kernelised_gram_matrix(
         Yprime_dep_add
     )
+    hadamard_K_X_K_Yprime_dep_add = np.multiply(mat_K_X, mat_K_Yprime_dep_add)
     hscic_values_3 = np.zeros_like(eval_points)
     hscic_values_3[:] = np.nan
     for i in range(nb_eval_points):
-        hscic_values_3[i] = hscic(z=eval_points[i],
-                                mat_K_X=mat_K_X,
-                                mat_K_Y=mat_K_Yprime_dep_add,
-                                mat_W=mat_W,
-                                func_vec_k_Z=func_vec_k_Z)
+        hscic_values_3[i] = hscic(
+            z=eval_points[i],
+            mat_K_X=mat_K_X,
+            mat_K_Y=mat_K_Yprime_dep_add,
+            hadamard_K_X_K_Y=hadamard_K_X_K_Yprime_dep_add,
+            mat_W=mat_W,
+            func_vec_k_Z=func_vec_k_Z)
     plt.scatter(
         eval_points,
         hscic_values_1,
@@ -195,5 +147,5 @@ if __name__ == '__main__':
     plt.legend(loc='best')
     plt.xlabel('z')
     plt.title('HSCIC values')
-    plt.savefig('Figure3b.png')
+    plt.savefig('Figure3b_new_even_faster.png')
     plt.close()

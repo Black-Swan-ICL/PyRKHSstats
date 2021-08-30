@@ -4,6 +4,8 @@ from sklearn.gaussian_process.kernels import Kernel
 
 
 class KernelWrapper:
+    # Predefined slots - instance attributes are neither needed nor wanted
+    __slots__ = ['kernel', 'is_sklearn_kernel']
 
     def __init__(self, kernel):
         """
