@@ -24,7 +24,7 @@ def hscic(z, mat_K_X, mat_K_Y, hadamard_K_X_K_Y, mat_W, func_vec_k_Z):
 
     k_Z_in_z = func_vec_k_Z(z)
 
-    # Avoid repeated matrix computations
+    # To avoid repeated matrix computations
     k_Z_in_z_W = k_Z_in_z.T @ mat_W
     K_X_k_Z_in_z_W = mat_K_X @ k_Z_in_z_W.T
     K_Y_k_Z_in_z_W = mat_K_Y @ k_Z_in_z_W.T
@@ -64,6 +64,7 @@ if __name__ == '__main__':
     Y_noise = Y_noise.reshape(-1, 1)
     Y_dep_add = Y_dep_add.reshape(-1, 1)
     Yprime_dep_add = Yprime_dep_add.reshape(-1, 1)
+
     # Figure 3 (a)
     plt.figure(figsize=(10, 8))
     plt.scatter(Z, X, c='blue', marker='o', label='X')
@@ -74,8 +75,9 @@ if __name__ == '__main__':
     plt.xlabel('z')
     plt.ylabel('x, y')
     plt.title('Simulated Data - Additive Noise')
-    plt.savefig('Figure3a_old.png')
+    plt.savefig('Figure3a.png')
     plt.close()
+
     # Figure 3 (b)
     nb_eval_points = 1000
     eval_points = np.linspace(start=-20, stop=20, num=nb_eval_points)
@@ -85,47 +87,60 @@ if __name__ == '__main__':
     mat_K_Z = kernel_z.compute_kernelised_gram_matrix(Z)
     n = mat_K_X.shape[0]
     mat_W = np.linalg.inv(mat_K_Z + n * regularisation_cst * np.identity(n))
+
     def func_vec_k_Z(z):
         return vec_k_Z(z, Z, kernel_z)
 
+    def compute_hscic_values(eval_points, mat_K_X, mat_K_Y, hadamard_K_X_K_Y,
+                             mat_W, func_vec_k_Z):
+
+        hscic_values = np.zeros_like(eval_points)
+        hscic_values[:] = np.nan
+        for i in range(len(eval_points)):
+            hscic_values[i] = hscic(z=eval_points[i],
+                                    mat_K_X=mat_K_X,
+                                    mat_K_Y=mat_K_Y,
+                                    hadamard_K_X_K_Y=hadamard_K_X_K_Y,
+                                    mat_W=mat_W,
+                                    func_vec_k_Z=func_vec_k_Z)
+
+        return hscic_values
+
     # First example
     hadamard_K_X_K_Y = np.multiply(mat_K_X, mat_K_Y)
-    hscic_values_1 = np.zeros_like(eval_points)
-    hscic_values_1[:] = np.nan
-    for i in range(nb_eval_points):
-        hscic_values_1[i] = hscic(z=eval_points[i],
-                                  mat_K_X=mat_K_X,
-                                  mat_K_Y=mat_K_Y,
-                                  hadamard_K_X_K_Y=hadamard_K_X_K_Y,
-                                  mat_W=mat_W,
-                                  func_vec_k_Z=func_vec_k_Z)
+    hscic_values_1 = compute_hscic_values(
+        eval_points=eval_points,
+        mat_K_X=mat_K_X,
+        mat_K_Y=mat_K_Y,
+        hadamard_K_X_K_Y=hadamard_K_X_K_Y,
+        mat_W=mat_W,
+        func_vec_k_Z=func_vec_k_Z
+    )
     # Second example
     mat_K_Y_dep_add = kernel_y.compute_kernelised_gram_matrix(Y_dep_add)
     hadamard_K_X_K_Y_dep_add = np.multiply(mat_K_X, mat_K_Y_dep_add)
-    hscic_values_2 = np.zeros_like(eval_points)
-    hscic_values_2[:] = np.nan
-    for i in range(nb_eval_points):
-        hscic_values_2[i] = hscic(z=eval_points[i],
-                                  mat_K_X=mat_K_X,
-                                  mat_K_Y=mat_K_Y_dep_add,
-                                  hadamard_K_X_K_Y=hadamard_K_X_K_Y_dep_add,
-                                  mat_W=mat_W,
-                                  func_vec_k_Z=func_vec_k_Z)
+    hscic_values_2 = compute_hscic_values(
+        eval_points=eval_points,
+        mat_K_X=mat_K_X,
+        mat_K_Y=mat_K_Y_dep_add,
+        hadamard_K_X_K_Y=hadamard_K_X_K_Y_dep_add,
+        mat_W=mat_W,
+        func_vec_k_Z=func_vec_k_Z
+    )
     # Third example
     mat_K_Yprime_dep_add = kernel_y.compute_kernelised_gram_matrix(
         Yprime_dep_add
     )
     hadamard_K_X_K_Yprime_dep_add = np.multiply(mat_K_X, mat_K_Yprime_dep_add)
-    hscic_values_3 = np.zeros_like(eval_points)
-    hscic_values_3[:] = np.nan
-    for i in range(nb_eval_points):
-        hscic_values_3[i] = hscic(
-            z=eval_points[i],
-            mat_K_X=mat_K_X,
-            mat_K_Y=mat_K_Yprime_dep_add,
-            hadamard_K_X_K_Y=hadamard_K_X_K_Yprime_dep_add,
-            mat_W=mat_W,
-            func_vec_k_Z=func_vec_k_Z)
+    hscic_values_3 = compute_hscic_values(
+        eval_points=eval_points,
+        mat_K_X=mat_K_X,
+        mat_K_Y=mat_K_Yprime_dep_add,
+        hadamard_K_X_K_Y=hadamard_K_X_K_Yprime_dep_add,
+        mat_W=mat_W,
+        func_vec_k_Z=func_vec_k_Z
+    )
+
     plt.scatter(
         eval_points,
         hscic_values_1,
@@ -147,5 +162,5 @@ if __name__ == '__main__':
     plt.legend(loc='best')
     plt.xlabel('z')
     plt.title('HSCIC values')
-    plt.savefig('Figure3b_new_even_faster.png')
+    plt.savefig('Figure3b.png')
     plt.close()
