@@ -6,6 +6,7 @@ from scipy.stats import norm
 from sklearn.gaussian_process.kernels import RBF
 
 from PyRKHSstats.kernel_wrapper import KernelWrapper
+from PyRKHSstats.utilities import timer
 
 
 def vec_k_Z(z, data_z, kernel_z):
@@ -91,6 +92,7 @@ if __name__ == '__main__':
     def func_vec_k_Z(z):
         return vec_k_Z(z, Z, kernel_z)
 
+    @timer
     def compute_hscic_values(eval_points, mat_K_X, mat_K_Y, hadamard_K_X_K_Y,
                              mat_W, func_vec_k_Z):
 
