@@ -9,9 +9,10 @@ from PyRKHSstats.kernel_wrapper import KernelWrapper
 from PyRKHSstats.utilities import timer
 
 
+# TODO document
 def vec_k_Z(z, data_z, kernel_z):
 
-    n = len(data_z)  # TODO you sure about that ?
+    n = len(data_z)
     res = np.zeros((n, 1))
     for i in range(n):
 
@@ -20,7 +21,7 @@ def vec_k_Z(z, data_z, kernel_z):
     return res
 
 
-# TODO does not work
+# TODO document
 def hscic(z, mat_K_X, mat_K_Y, hadamard_K_X_K_Y, mat_W, func_vec_k_Z):
 
     k_Z_in_z = func_vec_k_Z(z)
@@ -45,7 +46,7 @@ if __name__ == '__main__':
     # Conditional Mean Embedding' (J. Park, K.Muandet arXiv:2002.03689v8).
     np.random.seed(22)
     sample_size = 500
-    regularisation_cst = 0.01
+    regularisation_cst = 0.01 / sample_size  # to be able to replicate the figures in the article
     length_scale = 0.1 ** (-0.5)
     kernel_x = KernelWrapper(RBF(length_scale=length_scale))
     kernel_y = KernelWrapper(RBF(length_scale=length_scale))
@@ -67,7 +68,7 @@ if __name__ == '__main__':
     Yprime_dep_add = Yprime_dep_add.reshape(-1, 1)
 
     # Figure 3 (a)
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(20, 15))
     plt.scatter(Z, X, c='blue', marker='o', label='X')
     plt.scatter(Z, Y_noise, c='orange', marker='*', label='Y_noise')
     plt.scatter(Z, Y_dep_add, c='green', marker='x', label='Y_dep_add')
@@ -80,8 +81,7 @@ if __name__ == '__main__':
     plt.close()
 
     # Figure 3 (b)
-    nb_eval_points = 1000
-    eval_points = np.linspace(start=-20, stop=20, num=nb_eval_points)
+    eval_points = np.arange(-5, 5, 0.05)
 
     mat_K_X = kernel_x.compute_kernelised_gram_matrix(X)
     mat_K_Y = kernel_y.compute_kernelised_gram_matrix(Y_noise)
@@ -143,6 +143,7 @@ if __name__ == '__main__':
         func_vec_k_Z=func_vec_k_Z
     )
 
+    plt.figure(figsize=(20, 15))
     plt.scatter(
         eval_points,
         hscic_values_1,
