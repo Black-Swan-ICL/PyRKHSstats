@@ -10,12 +10,7 @@ from PyRKHSstats.hscic import compute_mat_W, compute_vec_k_Z_in_z, \
     compute_hscic
 
 
-if __name__ == '__main__':
-
-    # Reproducing the figures from 'A Measure-Theoretic Approach to Kernel
-    # Conditional Mean Embedding' (J. Park, K.Muandet arXiv:2002.03689v8).
-    np.random.seed(22)
-    sample_size = 500
+def run_simulation(sample_size=500, produce_plots=False):
     # to be able to replicate the figures in the article, need to divide by
     # the sample size
     regularisation_cst = 0.01 / sample_size
@@ -39,21 +34,22 @@ if __name__ == '__main__':
     Y_dep_add = Y_dep_add.reshape(-1, 1)
     Yprime_dep_add = Yprime_dep_add.reshape(-1, 1)
 
-    # Figure 3 (a)
-    plt.figure(figsize=(20, 15))
-    plt.scatter(Z, X, c='blue', marker='o', label='X')
-    plt.scatter(Z, Y_noise, c='orange', marker='*', label='Y_noise')
-    plt.scatter(Z, Y_dep_add, c='green', marker='x', label='Y_dep_add')
-    plt.scatter(Z, Yprime_dep_add, c='red', marker='D', label="Y'_dep_add")
-    plt.legend(loc='best')
-    plt.xlabel('z')
-    plt.ylabel('x, y')
-    plt.title('Simulated Data - Additive Noise')
-    plt.savefig('Figure3a.png')
-    plt.close()
+    if produce_plots:
+        # Figure 3 (a)
+        plt.figure(figsize=(20, 15))
+        plt.scatter(Z, X, c='blue', marker='o', label='X')
+        plt.scatter(Z, Y_noise, c='orange', marker='*', label='Y_noise')
+        plt.scatter(Z, Y_dep_add, c='green', marker='x', label='Y_dep_add')
+        plt.scatter(Z, Yprime_dep_add, c='red', marker='D', label="Y'_dep_add")
+        plt.legend(loc='best')
+        plt.xlabel('z')
+        plt.ylabel('x, y')
+        plt.title('Simulated Data - Additive Noise')
+        plt.savefig('Figure3a.png')
+        plt.close()
 
     # Figure 3 (b)
-    eval_points = np.arange(-5, 5, 0.05)
+    eval_points = np.arange(-10, 10, 0.05)
 
     mat_K_X = kernel_x.compute_kernelised_gram_matrix(X)
     mat_K_Y = kernel_y.compute_kernelised_gram_matrix(Y_noise)
@@ -65,7 +61,7 @@ if __name__ == '__main__':
     def func_vec_k_Z(z):
         return compute_vec_k_Z_in_z(z, Z, kernel_z)
 
-    @timer
+    # @timer
     def compute_hscic_values(eval_points, mat_K_X, mat_K_Y, hadamard_K_X_K_Y,
                              mat_W, func_vec_k_Z):
 
@@ -116,27 +112,36 @@ if __name__ == '__main__':
         func_vec_k_Z=func_vec_k_Z
     )
 
-    plt.figure(figsize=(20, 15))
-    plt.scatter(
-        eval_points,
-        hscic_values_1,
-        c='orange',
-        label='HSCIC(X, Y_noise | Z)'
-    )
-    plt.scatter(
-        eval_points,
-        hscic_values_2,
-        c='green',
-        label='HSCIC(X, Y_dep_add | Z)'
-    )
-    plt.scatter(
-        eval_points,
-        hscic_values_3,
-        c='red',
-        label="HSCIC(X, Y'_dep_add | Z)"
-    )
-    plt.legend(loc='best')
-    plt.xlabel('z')
-    plt.title('HSCIC values')
-    plt.savefig('Figure3b.png')
-    plt.close()
+    if produce_plots:
+        plt.figure(figsize=(20, 15))
+        plt.scatter(
+            eval_points,
+            hscic_values_1,
+            c='orange',
+            label='HSCIC(X, Y_noise | Z)'
+        )
+        plt.scatter(
+            eval_points,
+            hscic_values_2,
+            c='green',
+            label='HSCIC(X, Y_dep_add | Z)'
+        )
+        plt.scatter(
+            eval_points,
+            hscic_values_3,
+            c='red',
+            label="HSCIC(X, Y'_dep_add | Z)"
+        )
+        plt.legend(loc='best')
+        plt.xlabel('z')
+        plt.title('HSCIC values')
+        plt.savefig('Figure3b.png')
+        plt.close()
+
+
+if __name__ == '__main__':
+
+    # Reproducing the figures from 'A Measure-Theoretic Approach to Kernel
+    # Conditional Mean Embedding' (J. Park, K.Muandet arXiv:2002.03689v8).
+    np.random.seed(22)
+    run_simulation(sample_size=500, produce_plots=True)
