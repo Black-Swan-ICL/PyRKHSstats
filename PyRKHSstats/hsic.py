@@ -1,8 +1,10 @@
 # TODO reformat docstrings
-# This module contains the code to compute the HSIC and related quantities,
-# using the tools developed in 'A Kernel Statistical Test of Independence', A.
-# Gretton, K. Fukumizu, C. Hui Teo, L. Song, B. Scholkopf & A. J. Smola
-# (NIPS # 21, 2007) which will be referred to as 'the paper' in the module.
+"""
+This module contains the code to compute the HSIC and related quantities,
+using the tools developed in 'A Kernel Statistical Test of Independence', A.
+Gretton, K. Fukumizu, C. Hui Teo, L. Song, B. Scholkopf & A. J. Smola
+(NIPS # 21, 2007) which will be referred to as 'the paper' in the module.
+"""
 import numpy as np
 
 from PyRKHSstats.combinatorics_utilities import n_permute_m, \
@@ -20,7 +22,7 @@ def compute_squared_norm_mean_embedding(data, kernel):
     ----------
     data : array_like
         The observations in the domain space.
-    kernel : CustomKernel
+    kernel : KernelWrapper
         The reproducing kernel associated to the RKHS on the domain space.
 
     Returns
