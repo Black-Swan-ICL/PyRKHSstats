@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import matplotlib.pyplot as plt
 
 from scipy.stats import norm
@@ -58,8 +59,12 @@ if __name__ == '__main__':
     mat_K_X = kernel_x.compute_kernelised_gram_matrix(X)
     mat_K_Y = kernel_y.compute_kernelised_gram_matrix(Y_noise)
     mat_K_Z = kernel_z.compute_kernelised_gram_matrix(Z)
+    # Torching the kernel Gram matrices
+    mat_K_X = torch.from_numpy(mat_K_X)
+    mat_K_Y = torch.from_numpy(mat_K_Y)
+    mat_K_Z = torch.from_numpy(mat_K_Z)
     n = mat_K_X.shape[0]
-    mat_W = compute_mat_W(mat_K_Z=mat_K_Z,
+    mat_W = compute_mat_W(torch_mat_K_Z=mat_K_Z,
                           regularisation_constant=regularisation_cst)
 
     def func_vec_k_Z(z):
@@ -72,17 +77,19 @@ if __name__ == '__main__':
         hscic_values = np.zeros_like(eval_points)
         hscic_values[:] = np.nan
         for i in range(len(eval_points)):
-            hscic_values[i] = compute_hscic(z=eval_points[i],
-                                            mat_K_X=mat_K_X,
-                                            mat_K_Y=mat_K_Y,
-                                            hadamard_K_X_K_Y=hadamard_K_X_K_Y,
-                                            mat_W=mat_W,
-                                            func_vec_k_Z=func_vec_k_Z)
+            hscic_values[i] = compute_hscic(
+                z=eval_points[i],
+                torch_mat_K_X=mat_K_X,
+                torch_mat_K_Y=mat_K_Y,
+                torch_mat_hadamard_K_X_K_Y=hadamard_K_X_K_Y,
+                torch_mat_W=mat_W,
+                func_vec_k_Z=func_vec_k_Z
+            )
 
         return hscic_values
 
     # First example
-    hadamard_K_X_K_Y = np.multiply(mat_K_X, mat_K_Y)
+    hadamard_K_X_K_Y = mat_K_X * mat_K_Y
     hscic_values_1 = compute_hscic_values(
         eval_points=eval_points,
         mat_K_X=mat_K_X,
@@ -93,7 +100,9 @@ if __name__ == '__main__':
     )
     # Second example
     mat_K_Y_dep_add = kernel_y.compute_kernelised_gram_matrix(Y_dep_add)
-    hadamard_K_X_K_Y_dep_add = np.multiply(mat_K_X, mat_K_Y_dep_add)
+    # Torching
+    mat_K_Y_dep_add = torch.from_numpy(mat_K_Y_dep_add)
+    hadamard_K_X_K_Y_dep_add = mat_K_X * mat_K_Y_dep_add
     hscic_values_2 = compute_hscic_values(
         eval_points=eval_points,
         mat_K_X=mat_K_X,
@@ -106,7 +115,9 @@ if __name__ == '__main__':
     mat_K_Yprime_dep_add = kernel_y.compute_kernelised_gram_matrix(
         Yprime_dep_add
     )
-    hadamard_K_X_K_Yprime_dep_add = np.multiply(mat_K_X, mat_K_Yprime_dep_add)
+    # Torching
+    mat_K_Yprime_dep_add = torch.from_numpy(mat_K_Yprime_dep_add)
+    hadamard_K_X_K_Yprime_dep_add = mat_K_X * mat_K_Yprime_dep_add
     hscic_values_3 = compute_hscic_values(
         eval_points=eval_points,
         mat_K_X=mat_K_X,

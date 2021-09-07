@@ -3,7 +3,8 @@ import torch
 import numpy as np
 
 
-def compute_mat_W(mat_K_Z, regularisation_constant):
+# TODO doc not right. This uses PyTorch tensors
+def compute_mat_W(torch_mat_K_Z, regularisation_constant):
     """
     Computes the matrix :math:`W`, as specified in the paper.
 
@@ -14,7 +15,7 @@ def compute_mat_W(mat_K_Z, regularisation_constant):
 
     Parameters
     ----------
-    mat_K_Z : array_like
+    torch_mat_K_Z : array_like
         The kernel Gram matrix for the :math:`Z` variable :math:`K_Z`.
     regularisation_constant : float
         The regularisation constant.
@@ -24,16 +25,16 @@ def compute_mat_W(mat_K_Z, regularisation_constant):
     array_like
         The matrix :math:`W` as defined in the paper.
     """
-    torch_mat_K_Z = torch.from_numpy(mat_K_Z)
     n = torch_mat_K_Z.shape[0]
-    mat_W = (
+    torch_mat_W = (
             torch_mat_K_Z +
             n * regularisation_constant * torch.diag(torch.ones(n))
-    ).inverse().numpy()
+    ).inverse()
 
-    return mat_W
+    return torch_mat_W
 
 
+# TODO doc not right. This uses PyTorch tensors
 def compute_vec_k_Z_in_z(z, data_z, kernel_z):
     """
     Evaluates the function :math:`k_Z(z)`, as defined in the paper.
@@ -67,7 +68,9 @@ def compute_vec_k_Z_in_z(z, data_z, kernel_z):
     return res
 
 
-def compute_hscic(z, mat_K_X, mat_K_Y, hadamard_K_X_K_Y, mat_W, func_vec_k_Z):
+# TODO doc not right. This uses PyTorch tensors
+def compute_hscic(z, torch_mat_K_X, torch_mat_K_Y, torch_mat_hadamard_K_X_K_Y,
+                  torch_mat_W, func_vec_k_Z):
     """
     Computes the empirical HSCIC, as defined in the paper.
 
@@ -82,13 +85,13 @@ def compute_hscic(z, mat_K_X, mat_K_Y, hadamard_K_X_K_Y, mat_W, func_vec_k_Z):
     ----------
     z : array_like
         The evaluation point :math:`z`.
-    mat_K_X : array_like
+    torch_mat_K_X : array_like
         The kernel Gram matrix for the :math:`X` variable :math:`K_X`.
-    mat_K_Y : array_like
+    torch_mat_K_Y : array_like
         The kernel Gram matrix for the :math:`Y` variable :math:`K_Y`.
-    hadamard_K_X_K_Y : array_like
+    torch_mat_hadamard_K_X_K_Y : array_like
         The Hadamard product of :math:`K_X` and :math:`K_Y`.
-    mat_W : array_like
+    torch_mat_W : array_like
         The matrix :math:`W`, as defined in the paper.
     func_vec_k_Z : callable
         The function :math:`k_Z(z)`, as defined in the paper.
@@ -99,14 +102,9 @@ def compute_hscic(z, mat_K_X, mat_K_Y, hadamard_K_X_K_Y, mat_W, func_vec_k_Z):
         The empirical HSCIC evaluated at :math:`z`.
     """
     k_Z_in_z = func_vec_k_Z(z)
-
-    # Moving to PyTorch
     torch_k_Z_in_z = torch.from_numpy(k_Z_in_z)
-    torch_mat_W = torch.from_numpy(mat_W)
-    torch_mat_K_X = torch.from_numpy(mat_K_X)
-    torch_mat_K_Y = torch.from_numpy(mat_K_Y)
-    torch_mat_hadamard_K_X_K_Y = torch.from_numpy(hadamard_K_X_K_Y)
-    # TODO test whether it helps in very hgh dimensions #######################
+
+    # TODO test whether it helps in very high dimensions ######################
     # Moving to GPU
     # torch_k_Z_in_z = torch_k_Z_in_z.cuda()
     # torch_mat_W = torch_mat_W.cuda()
