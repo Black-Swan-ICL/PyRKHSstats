@@ -1,3 +1,9 @@
+"""
+This module implements the HSCIC and auxiliary quantities, as introduced in
+'A Measure-Theoretic Approach to Kernel Conditional Mean Embedding' (J. Park,
+and K. Muandet, 2020, NeurIPS #33) which will be referred to as 'the paper' in
+this module. PyTorch is used.
+"""
 import math
 import torch
 import numpy as np
