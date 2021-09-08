@@ -5,18 +5,19 @@ that rely on kernels (e.g. HSIC for independence testing).
 ## Implemented
 - Independence testing with HSIC (Hilbert-Schmidt Independence Criterion) using
   the Gamma approximation, as introduced in
-  'A Kernel Statistical Test of Independence', A. Gretton, K. Fukumizu, C. Hui 
-  Teo, L. Song, B. Scholkopf, and A. J. Smola (2007).
+  [A Kernel Statistical Test of Independence](https://papers.nips.cc/paper/2007/hash/d5cfead94f5350c12c322b5b664544c1-Abstract.html), 
+  A. Gretton, K. Fukumizu, C. Hui Teo, L. Song, B. Scholkopf, and A. J. Smola 
+  (NIPS 2007).
 - Measurement of conditional independence with HSCIC (Hilbert-Schmidt 
-  Conditional Independence Criterion), as introduced in 'A Measure-Theoretic 
-  Approach to Kernel Conditional Mean Embeddings', J. Park and K. Muandet 
-  (2020).
+  Conditional Independence Criterion), as introduced in [A Measure-Theoretic 
+  Approach to Kernel Conditional Mean Embeddings](https://papers.nips.cc/paper/2020/hash/f340f1b1f65b6df5b5e3f94d95b11daf-Abstract.html),
+  J. Park and K. Muandet (NeurIPS 2020).
 
 <br>
 
 | Resource | Description | Numpy based available | PyTorch based available |
 | :---  | :--- | :----: |:----: |
-| HSIC | For independence testing | Yes | No |
+| HSIC | For independence testing | Yes | Yes |
 | HSCIC | For the measurement of conditional independence | Yes | Yes |
 
 <br>
