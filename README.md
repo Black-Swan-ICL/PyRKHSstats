@@ -17,7 +17,7 @@ that rely on kernels (e.g. HSIC for independence testing).
 
 | Resource | Description | Numpy based available | PyTorch based available |
 | :---  | :--- | :----: |:----: |
-| HSIC | For independence testing | Yes | Yes |
+| HSIC | For independence testing | Yes | No |
 | HSCIC | For the measurement of conditional independence | Yes | Yes |
 
 <br>
