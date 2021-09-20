@@ -9,8 +9,8 @@ that rely on kernels (e.g. HSIC for independence testing).
   A. Gretton, K. Fukumizu, C. Hui Teo, L. Song, B. Scholkopf, and A. J. Smola 
   (NIPS 2007).
 - Measurement of conditional independence with HSCIC (Hilbert-Schmidt 
-  Conditional Independence Criterion), as introduced in [A Measure-Theoretic 
-  Approach to Kernel Conditional Mean Embeddings](https://papers.nips.cc/paper/2020/hash/f340f1b1f65b6df5b5e3f94d95b11daf-Abstract.html),
+  Conditional Independence Criterion), as introduced in 
+  [A Measure-Theoretic Approach to Kernel Conditional Mean Embeddings](https://papers.nips.cc/paper/2020/hash/f340f1b1f65b6df5b5e3f94d95b11daf-Abstract.html),
   J. Park and K. Muandet (NeurIPS 2020).
 
 <br>

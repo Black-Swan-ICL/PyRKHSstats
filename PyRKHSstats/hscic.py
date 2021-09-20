@@ -79,7 +79,7 @@ def compute_hscic(z, mat_K_X, mat_K_Y, hadamard_K_X_K_Y, mat_W, func_vec_k_Z):
     .. math::
         \widehat{H}^2_{X, Y | Z}(z) = k_Z(z)^T W (K_X \odot K_Y) W^T k_Z(z) -
         2 k_Z(z)^T W ((K_X W^T k_Z(z)) \odot (K_Y W^T k_Z(z))) +
-        (k_Z(z)^T W K_X W^T k_Z(z))(k_Z(z)^T W K_Y W^T k_Z(z))
+        (k_Z(z)^T W K_X W^T k_Z(z))(k_Z(z)^T W K_Y W^T k_Z(z)).
 
     Parameters
     ----------
