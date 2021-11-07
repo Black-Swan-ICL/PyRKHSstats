@@ -1,24 +1,40 @@
 """
 This module contains the code to compute the Maximum Mean Discrepancy (MMD)
-presented in 'A Kernel Two-Sample Test', A. Gretton, K. M. Borgwardt, M. J.
-Rasch, B. Sch\"{o}lkopf and A. Smola (Journal of Machine Learning Research #13,
-2012) which will be referred to as 'the paper' in the module.
+following the material presented in papers 'A Fast, Consistent Kernel
+Two-Sample Test', A. Gretton, K. Fukumizu, Z. Harchaoui and B. K.
+Sriperumbudur (NIPS #22, 2009) and 'A Kernel Two-Sample Test', A. Gretton,
+K. M. Borgwardt, M. J. Rasch, B. Sch\"{o}lkopf and A. Smola (Journal of
+Machine Learning Research #13, 2012).
 """
+import math
 
 
 # TODO code is very slow...
-def compute_unbiased_mmd(data_x, data_y, kernel):
+def compute_unbiased_squared_mmd(data_x, data_y, kernel):
     """
+    Computes the unbiased estimate of the squared Maximum Mean Discrepancy
+    between :math:`\text{P}_{\text{X}}` and :math:`\text{P}_{\text{Y}}`
+    based on the samples of the :math:`x_i`'s and the :math:`y_i`'s.
 
     Parameters
     ----------
-    data_x
-    data_y
+    data_x : array_like
+        The :math:`x_i`'s.
+    data_y : array_like
+        The :math:`y_i`'s.
     kernel : KernelWrapper
+        The reproducing kernel associated to the RKHS chosen on the space.
 
     Returns
     -------
+    float
+        The unbiased estimate of the squared MMD.
 
+    Notes
+    -----
+    As pointed out by A. Gretton and co-authors in their 2012 'A Kernel
+    Two-Sample Test' (paragraph following the proof of lemma 6), computing
+    the unbiased estimator of the squared MMD can yield negative values.
     """
 
     nx = data_x.shape[0]
@@ -64,3 +80,38 @@ def compute_unbiased_mmd(data_x, data_y, kernel):
         )
 
         return unbiased_mmd
+
+
+def compute_biased_mmd(data_x, data_y, kernel):
+    """
+    Computes the biased estimate of the Maximum Mean Discrepancy between
+    :math:`\text{P}_{\text{X}}` and :math:`\text{P}_{\text{Y}}`.
+
+    Parameters
+    ----------
+    data_x : array_like
+        The :math:`x_i`'s.
+    data_y : array_like
+        The :math:`y_i`'s.
+    kernel : KernelWrapper
+        The reproducing kernel associated to the RKHS chosen on the space.
+
+    Returns
+    -------
+    float
+        The biased estimate of the MMD.
+    """
+    nx = data_x.shape[0]
+    ny = data_y.shape[0]
+
+    mat_Kx = kernel.compute_kernelised_gram_matrix(data_x)
+    mat_Ky = kernel.compute_kernelised_gram_matrix(data_y)
+    mat_Kxy = kernel.compute_rectangular_kernel_matrix(data_x, data_y)
+
+    biased_mmd = math.sqrt(
+        mat_Kx.sum() / (nx * nx) +
+        mat_Ky.sum() / (ny * ny) -
+        2 * mat_Kxy.sum() / (nx * ny)
+    )
+
+    return biased_mmd
