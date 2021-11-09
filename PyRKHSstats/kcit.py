@@ -149,7 +149,7 @@ def compute_mat_tilde_W(mat_tilde_Kddotx_given_z, mat_tilde_Ky_given_z):
         vec_tilde_w = vec_tilde_w.flatten('C')
         mat_tilde_W[:, i] = vec_tilde_w
 
-    return np.ones((n, n))
+    return mat_tilde_W
 
 
 def calibrate_tci_gamma_approximation(mat_tilde_Kddotx_given_z,
