@@ -2,7 +2,8 @@
 This module contains the code to conduct the Kernel-based Conditional
 Independence Test as defined in 'Kernel-based Conditional Independence Test and
 Application in Causal Discovery', K. Zhang, J. Peters, D. Janzing and B.
-Sch\"{o}lkopf (UAI #27, 2011).
+Sch\"{o}lkopf (UAI #27, 2011) which will be referred to as 'the paper' in the
+module.
 """
 import numpy as np
 
@@ -11,6 +12,41 @@ from scipy.stats import gamma
 
 def compute_tci(data_x, data_y, data_z, kernel_kx, kernel_ky, kernel_kz,
                 epsilon):
+    """
+    Computes :math:`\widetilde{\text{T}}_{\text{CI}}` the test statistic for
+    KCIT, as presented in the paper. Also provides some matrices used in the
+    computation that are expensive to compute and re-used in other parts of
+    KCIT.
+
+    Parameters
+    ----------
+    data_x : array_like
+        The observations in :math:`\mathcal{X}` space.
+    data_y : array_like
+        The observations in :math:`\mathcal{Y}` space.
+    data_z : array_like
+        The observations in :math:`\mathcal{Z}` space.
+    kernel_kx : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{X}`.
+    kernel_ky : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Y}`.
+    kernel_kz : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Z}`.
+    epsilon : float
+        A regularisation parameter used in the computation of matrix
+        :math:`\text{R}_{\text{Z}}` in the paper.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the value of
+        :math:`\widetilde{\text{T}}_{\text{CI}}` and matrices
+        :math:`\widetilde{\text{K}}_{\ddot{\text{X}} | \text{Z}}` and
+        :math:`\widetilde{\text{K}}_{\text{Y} | \text{Z}}`.
+    """
 
     n = data_x.shape[0]
 
@@ -46,6 +82,24 @@ def compute_tci(data_x, data_y, data_z, kernel_kx, kernel_ky, kernel_kz,
 
 
 def compute_mat_tilde_W(mat_tilde_Kddotx_given_z, mat_tilde_Ky_given_z):
+    """
+    Computes :math:`\widetilde{W}` as defined in the paper ; it is used in
+    the Gamma approximation scheme for KCIT.
+
+    Parameters
+    ----------
+    mat_tilde_Kddotx_given_z : array_like
+        Matrix :math:`\widetilde{\text{K}}_{\ddot{\text{X}} | \text{Z}}` as
+        defined in the paper.
+    mat_tilde_Ky_given_z : array_like
+        Matrix :math:`\widetilde{\text{K}}_{\text{Y} | \text{Z}}` as defined in
+        the paper.
+
+    Returns
+    -------
+    array_like
+        Matrix :math:`\widetilde{W}` as defined in the paper.
+    """
 
     n = mat_tilde_Kddotx_given_z.shape[0]
 
@@ -93,6 +147,25 @@ def compute_mat_tilde_W(mat_tilde_Kddotx_given_z, mat_tilde_Ky_given_z):
 
 def calibrate_tci_gamma_approximation(mat_tilde_Kddotx_given_z,
                                       mat_tilde_Ky_given_z):
+    """
+    Returns a calibrated, frozen Gamma distribution, ready for use for a
+    Gamma approximation KCIT test.
+
+    Parameters
+    ----------
+    mat_tilde_Kddotx_given_z : array_like
+        Matrix :math:`\widetilde{\text{K}}_{\ddot{\text{X}} | \text{Z}}` as
+        defined in the paper.
+    mat_tilde_Ky_given_z : array_like
+        Matrix :math:`\widetilde{\text{K}}_{\text{Y} | \text{Z}}` as defined in
+        the paper.
+
+    Returns
+    -------
+    scipy.stats._distn_infrastructure.rv_frozen
+        The Gamma distribution, calibrated and ready to use for the so-called
+        Gamma approximation in KCIT conditional independence testing.
+    """
 
     n = mat_tilde_Kddotx_given_z.shape[0]
     mat_tilde_W = compute_mat_tilde_W(
@@ -109,5 +182,3 @@ def calibrate_tci_gamma_approximation(mat_tilde_Kddotx_given_z,
     beta = var_tci / mean_tci
 
     return gamma(alpha, loc=0, scale=beta)
-
-
