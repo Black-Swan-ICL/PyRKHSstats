@@ -105,7 +105,11 @@ def compute_mat_tilde_W(mat_tilde_Kddotx_given_z, mat_tilde_Ky_given_z):
 
     # Computing the EVD of $\widetilde{\text{K}}_{\ddot{\text{X}} | \text{Z}}$
     eigenval_mat_tilde_Kddotx_given_z, eigenvec_mat_tilde_Kddotx_given_z = (
-        np.linalg.eig(mat_tilde_Kddotx_given_z)
+        np.linalg.eigh(mat_tilde_Kddotx_given_z)
+    )
+    # To handle cases where something like a - 1 * macheps pops up
+    eigenval_mat_tilde_Kddotx_given_z = np.abs(
+        eigenval_mat_tilde_Kddotx_given_z
     )
     # The eigenvalues need to be arranged in descending order
     descending_indices = eigenval_mat_tilde_Kddotx_given_z.argsort()[::-1]
@@ -121,7 +125,10 @@ def compute_mat_tilde_W(mat_tilde_Kddotx_given_z, mat_tilde_Ky_given_z):
 
     # Computing the EVD of $\widetilde{\text{K}}_{\text{Y} | \text{Z}}$
     eigenval_mat_tilde_Ky_given_z, eigenvec_mat_tilde_Ky_given_z = (
-        np.linalg.eig(mat_tilde_Ky_given_z)
+        np.linalg.eigh(mat_tilde_Ky_given_z)
+    )
+    eigenval_mat_tilde_Ky_given_z = np.abs(
+        eigenval_mat_tilde_Ky_given_z
     )
     # The eigenvalues need to be arranged in descending order
     descending_indices = eigenval_mat_tilde_Ky_given_z.argsort()[::-1]
