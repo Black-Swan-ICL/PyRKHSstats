@@ -53,7 +53,15 @@ def compute_mat_tilde_W(mat_tilde_Kddotx_given_z, mat_tilde_Ky_given_z):
     eigenval_mat_tilde_Kddotx_given_z, eigenvec_mat_tilde_Kddotx_given_z = (
         np.linalg.eig(mat_tilde_Kddotx_given_z)
     )
-    mat_phi = eigenvec_mat_tilde_Kddotx_given_z @ np.sqrt(
+    # The eigenvalues need to be arranged in descending order
+    descending_indices = eigenval_mat_tilde_Kddotx_given_z.argsort()[::-1]
+    eigenval_mat_tilde_Kddotx_given_z = np.diag(
+        eigenval_mat_tilde_Kddotx_given_z[descending_indices]
+    )
+    eigenvec_mat_tilde_Kddotx_given_z = eigenvec_mat_tilde_Kddotx_given_z[
+        :, descending_indices
+    ]
+    mat_psi = eigenvec_mat_tilde_Kddotx_given_z @ np.sqrt(
         eigenval_mat_tilde_Kddotx_given_z
     )
 
@@ -61,9 +69,24 @@ def compute_mat_tilde_W(mat_tilde_Kddotx_given_z, mat_tilde_Ky_given_z):
     eigenval_mat_tilde_Ky_given_z, eigenvec_mat_tilde_Ky_given_z = (
         np.linalg.eig(mat_tilde_Ky_given_z)
     )
-    mat_psi = eigenvec_mat_tilde_Ky_given_z @ np.sqrt(
+    # The eigenvalues need to be arranged in descending order
+    descending_indices = eigenval_mat_tilde_Ky_given_z.argsort()[::-1]
+    eigenval_mat_tilde_Ky_given_z = np.diag(
+        eigenval_mat_tilde_Ky_given_z[descending_indices]
+    )
+    eigenvec_mat_tilde_Ky_given_z = eigenvec_mat_tilde_Ky_given_z[
+        :, descending_indices
+    ]
+    mat_phi = eigenvec_mat_tilde_Ky_given_z @ np.sqrt(
         eigenval_mat_tilde_Ky_given_z
     )
+
+    # Computing matrix $\widetilde{W}$
+    mat_tilde_W = np.zeros((n * n, n))
+    for i in range(n):
+        vec_tilde_w = np.outer(mat_psi[i, :], mat_phi[i, :])
+        vec_tilde_w = vec_tilde_w.flatten('C')
+        mat_tilde_W[:, i] = vec_tilde_w
 
     return np.ones((n, n))
 
