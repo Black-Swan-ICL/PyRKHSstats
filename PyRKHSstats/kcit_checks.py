@@ -88,7 +88,7 @@ if __name__ == '__main__':
     savedir = os.path.join('checks', 'KCIT')
     os.makedirs(savedir, exist_ok=True)
 
-    nb_sim = 100
+    nb_sim = 200
 
     test_level = 0.05
     N = 100
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
     for i in range(nb_sim):
 
-        example2 = generate_low_dimensional_ci_example(nb_observations=N)
+        example2 = generate_low_dimensional_not_ci_example(nb_observations=N)
 
         kcit_example2 = perform_kcit(
             data_x=example2['data_x'],
