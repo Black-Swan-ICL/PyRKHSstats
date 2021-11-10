@@ -12,6 +12,10 @@ that rely on kernels (e.g. HSIC for independence testing).
   Conditional Independence Criterion), as introduced in 
   [A Measure-Theoretic Approach to Kernel Conditional Mean Embeddings](https://papers.nips.cc/paper/2020/hash/f340f1b1f65b6df5b5e3f94d95b11daf-Abstract.html),
   J. Park and K. Muandet (NeurIPS 2020).
+- The Kernel-based Conditional Independence Test (KCIT), as introduced in 
+  [Kernel-based Conditional Independence Test and Application in Causal 
+  Discovery](https://arxiv.org/abs/1202.3775), K. Zhang, J. Peters, D. Janzing,
+  B. Scholkopf (UAI 2011).
 
 <br>
 
@@ -19,6 +23,7 @@ that rely on kernels (e.g. HSIC for independence testing).
 | :---  | :--- | :----: |:----: |
 | HSIC | For independence testing | Yes | No |
 | HSCIC | For the measurement of conditional independence | Yes | Yes |
+| KCIT | For conditional independence testing | Yes | No |
 
 <br>
   
