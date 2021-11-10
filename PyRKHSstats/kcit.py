@@ -7,7 +7,21 @@ module.
 """
 import numpy as np
 
+from enum import Enum, unique
+
 from scipy.stats import gamma
+
+
+@unique
+class ImplementedKCITSchemes(Enum):
+    GAMMA = 'Gamma Approximation'
+
+
+class KCITTestingSchemeNotImplemented(Exception):
+    """Raised when the user requests a scheme for KCIT that is not implemented.
+    """
+
+    pass
 
 
 def compute_tci(data_x, data_y, data_z, kernel_kx, kernel_ky, kernel_kz,
@@ -189,3 +203,128 @@ def calibrate_tci_gamma_approximation(mat_tilde_Kddotx_given_z,
     beta = var_tci / mean_tci
 
     return gamma(alpha, loc=0, scale=beta)
+
+
+def perform_gamma_approximation_kcit(data_x, data_y, data_z, kernel_kx,
+                                     kernel_ky, kernel_kz, epsilon,
+                                     test_level):
+    """
+    Performs the KCIT conditional independence test using the Gamma
+    approximation scheme.
+
+    Parameters
+    ----------
+    data_x : array_like
+        The observations in :math:`\mathcal{X}` space.
+    data_y : array_like
+        The observations in :math:`\mathcal{Y}` space.
+    data_z : array_like
+        The observations in :math:`\mathcal{Z}` space.
+    kernel_kx : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{X}`.
+    kernel_ky : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Y}`.
+    kernel_kz : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Z}`.
+    epsilon : float
+        A regularisation parameter used in the computation of matrix
+        :math:`\text{R}_{\text{Z}}` in the paper.
+    test_level : float
+        The level of the test.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the result of the test, the value of the test
+        statistic, the rejection threshold (i.e. the 1 - test_level quantile),
+        and the calibrated Gamma distribution used,
+    """
+
+    kcit_dic = compute_tci(
+        data_x=data_x,
+        data_y=data_y,
+        data_z=data_z,
+        kernel_kx=kernel_kx,
+        kernel_ky=kernel_ky,
+        kernel_kz=kernel_kz,
+        epsilon=epsilon
+    )
+    tci = kcit_dic['TCI']
+    mat_tilde_Kddotx_given_z = kcit_dic['tildeK_ddotX_given_Z']
+    mat_tilde_Ky_given_z = kcit_dic['tildeK_Y_given_Z']
+
+    calibrated_gamma = calibrate_tci_gamma_approximation(
+        mat_tilde_Kddotx_given_z=mat_tilde_Kddotx_given_z,
+        mat_tilde_Ky_given_z=mat_tilde_Ky_given_z
+    )
+
+    threshold = calibrated_gamma.ppf(1 - test_level).flatten()[0]
+
+    dic = dict()
+    dic['Reject H0 (H0 : X _||_ Y | Z)'] = tci > threshold
+    dic['TCI'] = tci
+    dic['Rejection threshold'] = threshold
+    dic['Gamma distribution'] = calibrated_gamma
+
+    return dic
+
+
+def perform_kcit(data_x, data_y, data_z, kernel_kx, kernel_ky, kernel_kz,
+                 epsilon, test_level, scheme):
+    """
+    Performs the KCIT conditional independence test using the scheme specified
+    by the user.
+
+    Parameters
+    ----------
+    data_x : array_like
+        The observations in :math:`\mathcal{X}` space.
+    data_y : array_like
+        The observations in :math:`\mathcal{Y}` space.
+    data_z : array_like
+        The observations in :math:`\mathcal{Z}` space.
+    kernel_kx : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{X}`.
+    kernel_ky : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Y}`.
+    kernel_kz : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Z}`.
+    epsilon : float
+        A regularisation parameter used in the computation of matrix
+        :math:`\text{R}_{\text{Z}}` in the paper.
+    test_level : float
+        The level of the test.
+    scheme : ImplementedKCITSchemes
+        The testing scheme to use.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the result of the test and additional
+        information.
+    """
+
+    if scheme is ImplementedKCITSchemes.GAMMA:
+
+        test_dic = perform_gamma_approximation_kcit(data_x=data_x,
+                                                    data_y=data_y,
+                                                    data_z=data_z,
+                                                    kernel_kx=kernel_kx,
+                                                    kernel_ky=kernel_ky,
+                                                    kernel_kz=kernel_kz,
+                                                    epsilon=epsilon,
+                                                    test_level=test_level)
+
+        return test_dic
+
+    else:
+
+        msg = f"Scheme '{scheme}' not implemented for KCIT."
+        raise KCITTestingSchemeNotImplemented(msg)
+
