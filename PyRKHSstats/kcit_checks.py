@@ -136,18 +136,43 @@ if __name__ == '__main__':
     plt.close()
 
     # Example II : low-dimensional, CI does not hold
-    example2 = generate_low_dimensional_ci_example(nb_observations=N)
+    values_tci = np.zeros((nb_sim, 1))
+    values_threshold = np.zeros((nb_sim, 1))
+    values_rejection = np.zeros((nb_sim, 1))
 
-    kcit_example2 = perform_kcit(
-        data_x=example2['data_x'],
-        data_y=example2['data_y'],
-        data_z=example2['data_z'],
-        kernel_kx=example2['kernel_kx'],
-        kernel_ky=example2['kernel_ky'],
-        kernel_kz=example2['kernel_kz'],
-        epsilon=example2['epsilon'],
-        test_level=test_level,
-        scheme=ImplementedKCITSchemes.GAMMA
-    )
+    for i in range(nb_sim):
 
-    print(kcit_example2)
+        example2 = generate_low_dimensional_ci_example(nb_observations=N)
+
+        kcit_example2 = perform_kcit(
+            data_x=example2['data_x'],
+            data_y=example2['data_y'],
+            data_z=example2['data_z'],
+            kernel_kx=example2['kernel_kx'],
+            kernel_ky=example2['kernel_ky'],
+            kernel_kz=example2['kernel_kz'],
+            epsilon=example2['epsilon'],
+            test_level=test_level,
+            scheme=ImplementedKCITSchemes.GAMMA
+        )
+
+        values_tci[i, 0] = kcit_example2['TCI']
+        values_threshold[i, 0] = kcit_example2['Rejection threshold']
+        values_rejection[i, 0] = (
+            1 if values_tci[i, 0] > values_threshold[i, 0] else 0
+        )
+
+    df_example2 = pd.DataFrame()
+    df_example2['TCI'] = values_tci[:, 0]
+    df_example2['Rejection Threshold'] = values_threshold[:, 0]
+    df_example2['H0 Rejected'] = values_rejection[:, 0]
+    csv_filename = os.path.join(savedir, 'KCIT_example2.csv')
+    df_example2.to_csv(csv_filename, index=False)
+
+    plt.hist(values_tci[:, 0], bins='auto', density=True, stacked=True)
+    plt.xlabel('TCI')
+    plt.ylabel('Probability density')
+    plt.title('Empirical TCI density under H1')
+    plot_filename = os.path.join(savedir, 'TCI_histogram_example2.png')
+    plt.savefig(plot_filename)
+    plt.close()
