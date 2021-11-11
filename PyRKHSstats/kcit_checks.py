@@ -127,14 +127,24 @@ if __name__ == '__main__':
     df_example1['TCI'] = values_tci[:, 0]
     df_example1['Rejection Threshold'] = values_threshold[:, 0]
     df_example1['H0 Rejected'] = values_rejection[:, 0]
-    csv_filename = os.path.join(savedir, 'KCIT_example1.csv')
+    csv_filename = os.path.join(
+        savedir,
+        (
+                f'KCIT_example1_{N}_observations_{nb_sim}_simulations_' +
+                f'{test_level}_level.csv'
+        )
+    )
     df_example1.to_csv(csv_filename, index=False)
 
     plt.hist(values_tci[:, 0], bins='auto', density=True, stacked=True)
     plt.xlabel('TCI')
     plt.ylabel('Probability density')
-    plt.title('Empirical TCI density under H0')
-    plot_filename = os.path.join(savedir, 'TCI_histogram_example1.png')
+    title = f'Empirical TCI density under H0 with {N} observations, over ' \
+            f'{nb_sim} simulations.'
+    plt.title(title)
+    plot_filename = os.path.join(
+        savedir,
+        f'TCI_histogram_example1_{N}_observations_{nb_sim}_simulations.png')
     plt.savefig(plot_filename)
     plt.close()
 
@@ -169,14 +179,24 @@ if __name__ == '__main__':
     df_example2['TCI'] = values_tci[:, 0]
     df_example2['Rejection Threshold'] = values_threshold[:, 0]
     df_example2['H0 Rejected'] = values_rejection[:, 0]
-    csv_filename = os.path.join(savedir, 'KCIT_example2.csv')
+    csv_filename = os.path.join(
+        savedir,
+        (
+                f'KCIT_example2_{N}_observations_{nb_sim}_simulations_' +
+                f'{test_level}_level.csv'
+        )
+    )
     df_example2.to_csv(csv_filename, index=False)
 
     plt.hist(values_tci[:, 0], bins='auto', density=True, stacked=True)
     plt.xlabel('TCI')
     plt.ylabel('Probability density')
-    plt.title('Empirical TCI density under H1')
-    plot_filename = os.path.join(savedir, 'TCI_histogram_example2.png')
+    title = f'Empirical TCI density under H1 with {N} observations, over ' \
+            f'{nb_sim} simulations.'
+    plt.title(title)
+    plot_filename = os.path.join(
+        savedir,
+        f'TCI_histogram_example2_{N}_observations_{nb_sim}_simulations.png')
     plt.savefig(plot_filename)
     plt.close()
 
