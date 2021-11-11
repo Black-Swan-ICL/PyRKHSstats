@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -88,10 +89,12 @@ if __name__ == '__main__':
     savedir = os.path.join('checks', 'KCIT')
     os.makedirs(savedir, exist_ok=True)
 
-    nb_sim = 200
+    nb_sim = 10000
 
     test_level = 0.05
     N = 100
+
+    start_time = time.time()
 
     # Example I : low-dimensioanl settings, CI holds true
     values_tci = np.zeros((nb_sim, 1))
@@ -176,3 +179,7 @@ if __name__ == '__main__':
     plot_filename = os.path.join(savedir, 'TCI_histogram_example2.png')
     plt.savefig(plot_filename)
     plt.close()
+
+    end_time = time.time()
+
+    print(end_time - start_time)

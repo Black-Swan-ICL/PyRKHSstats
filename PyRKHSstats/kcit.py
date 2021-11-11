@@ -7,6 +7,7 @@ module.
 """
 import numpy as np
 
+from math import sqrt
 from enum import Enum, unique
 
 from scipy.stats import gamma
@@ -194,10 +195,20 @@ def calibrate_tci_gamma_approximation(mat_tilde_Kddotx_given_z,
         mat_tilde_Ky_given_z=mat_tilde_Ky_given_z
     )
 
-    mat_tilde_W_tilde_W_transpose = mat_tilde_W @ mat_tilde_W.transpose()
-    mean_tci = (1 / n) * np.trace(mat_tilde_W_tilde_W_transpose)
-    var_tci = (2 / (n * n)) * np.trace(mat_tilde_W_tilde_W_transpose @
-                                       mat_tilde_W_tilde_W_transpose)
+    # Not the smart way to do that : costs are considerable and so avoidable
+    # : just use the singular values of mat_tilde_W !!!
+    # mat_tilde_W_tilde_W_transpose = mat_tilde_W @ mat_tilde_W.transpose()
+    # mean_tci = (1 / n) * np.trace(mat_tilde_W_tilde_W_transpose)
+    # var_tci = (2 / (n * n)) * np.trace(mat_tilde_W_tilde_W_transpose @
+    #                                    mat_tilde_W_tilde_W_transpose)
+    singular_values = np.linalg.svd(
+        mat_tilde_W,
+        compute_uv=False  # We need only the singular values, not the vectors !
+    )
+    trace_mat_tilde_W_tilde_W_transpose = sqrt(np.sum(singular_values ** 2))
+    trace_mat_tilde_W_tilde_W_transpose_squared = np.sum(singular_values ** 4)
+    mean_tci = (1 / n) * trace_mat_tilde_W_tilde_W_transpose
+    var_tci = (2 / (n * n)) * trace_mat_tilde_W_tilde_W_transpose_squared
 
     alpha = mean_tci ** 2 / var_tci
     beta = var_tci / mean_tci
