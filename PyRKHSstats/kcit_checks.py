@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     nb_sim = 1000
 
-    test_level = 0.05
+    test_level = 0.01
     N = 200
 
     start_time = time.time()
@@ -144,7 +144,11 @@ if __name__ == '__main__':
     plt.title(title)
     plot_filename = os.path.join(
         savedir,
-        f'TCI_histogram_example1_{N}_observations_{nb_sim}_simulations.png')
+        (
+            f'TCI_histogram_example1_{N}_observations_{nb_sim}_simulations_' +
+            f'{test_level}_test_level_run.png'
+        )
+    )
     plt.savefig(plot_filename)
     plt.close()
 
@@ -196,7 +200,11 @@ if __name__ == '__main__':
     plt.title(title)
     plot_filename = os.path.join(
         savedir,
-        f'TCI_histogram_example2_{N}_observations_{nb_sim}_simulations.png')
+        (
+            f'TCI_histogram_example2_{N}_observations_{nb_sim}_simulations_' +
+            f'{test_level}_test_level_run.png'
+        )
+    )
     plt.savefig(plot_filename)
     plt.close()
 
