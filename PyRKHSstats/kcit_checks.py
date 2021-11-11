@@ -89,10 +89,10 @@ if __name__ == '__main__':
     savedir = os.path.join('checks', 'KCIT')
     os.makedirs(savedir, exist_ok=True)
 
-    nb_sim = 10000
+    nb_sim = 1000
 
     test_level = 0.05
-    N = 100
+    N = 200
 
     start_time = time.time()
 
