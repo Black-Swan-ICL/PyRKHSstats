@@ -10,12 +10,13 @@ import numpy as np
 from math import sqrt
 from enum import Enum, unique
 
-from scipy.stats import gamma
+from scipy.stats import gamma, chi2
 
 
 @unique
 class ImplementedKCITSchemes(Enum):
     GAMMA = 'Gamma Approximation'
+    MONTECARLO = 'Monte Carlo'
 
 
 class KCITTestingSchemeNotImplemented(Exception):
@@ -283,6 +284,87 @@ def perform_gamma_approximation_kcit(data_x, data_y, data_z, kernel_kx,
     return dic
 
 
+def perform_monte_carlo_kcit(data_x, data_y, data_z, kernel_kx, kernel_ky,
+                             kernel_kz, epsilon, test_level,
+                             nb_simulations=5000):
+    """
+    Performs the KCIT conditional independence test using the Monte Carlo
+    scheme following equation (14) in proposition 5 in the paper.
+
+    Parameters
+    ----------
+    data_x : array_like
+        The observations in :math:`\mathcal{X}` space.
+    data_y : array_like
+        The observations in :math:`\mathcal{Y}` space.
+    data_z : array_like
+        The observations in :math:`\mathcal{Z}` space.
+    kernel_kx : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{X}`.
+    kernel_ky : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Y}`.
+    kernel_kz : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Z}`.
+    epsilon : float
+        A regularisation parameter used in the computation of matrix
+        :math:`\text{R}_{\text{Z}}` in the paper.
+    test_level : float
+        The level of the test.
+    nb_simulations : int
+        The number of draws in the Monte Carlo simulation.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the result of the test, the value of the test
+        statistic, the rejection threshold (i.e. the 1 - test_level quantile),
+        as well as the draws from the Monte Carlo simulation to be able to
+        reconstruct the simulated null distribution if later needed.
+    """
+
+    kcit_dic = compute_tci(
+        data_x=data_x,
+        data_y=data_y,
+        data_z=data_z,
+        kernel_kx=kernel_kx,
+        kernel_ky=kernel_ky,
+        kernel_kz=kernel_kz,
+        epsilon=epsilon
+    )
+    tci = kcit_dic['TCI']
+    mat_tilde_Kddotx_given_z = kcit_dic['tildeK_ddotX_given_Z']
+    mat_tilde_Ky_given_z = kcit_dic['tildeK_Y_given_Z']
+
+    mat_tilde_W = compute_mat_tilde_W(
+        mat_tilde_Kddotx_given_z=mat_tilde_Kddotx_given_z,
+        mat_tilde_Ky_given_z=mat_tilde_Ky_given_z
+    )
+    singular_values = np.linalg.svd(
+        mat_tilde_W,
+        compute_uv=False  # We need only the singular values, not the vectors !
+    )
+
+    m = singular_values.shape[0]
+    draws_from_null = np.zeros((nb_simulations, 1))
+    for i in range(nb_simulations):
+        chi_squares = chi2.rvs(1, loc=0, scale=1, size=m)
+        draws_from_null[i, 0] = (1 / m) * np.dot(singular_values, chi_squares)
+
+    # Compute the empirical quantile
+    threshold = np.quantile(draws_from_null, 1 - test_level)
+
+    dic = dict()
+    dic['Reject H0 (H0 : X _||_ Y | Z)'] = tci > threshold
+    dic['TCI'] = tci
+    dic['Rejection threshold'] = threshold
+    dic['Samples from simulated null'] = draws_from_null
+
+    return dic
+
+
 def perform_kcit(data_x, data_y, data_z, kernel_kx, kernel_ky, kernel_kz,
                  epsilon, test_level, scheme):
     """
@@ -331,6 +413,19 @@ def perform_kcit(data_x, data_y, data_z, kernel_kx, kernel_ky, kernel_kz,
                                                     kernel_kz=kernel_kz,
                                                     epsilon=epsilon,
                                                     test_level=test_level)
+
+        return test_dic
+
+    elif scheme is ImplementedKCITSchemes.MONTECARLO:
+
+        test_dic = perform_monte_carlo_kcit(data_x=data_x,
+                                            data_y=data_y,
+                                            data_z=data_z,
+                                            kernel_kx=kernel_kx,
+                                            kernel_ky=kernel_ky,
+                                            kernel_kz=kernel_kz,
+                                            epsilon=epsilon,
+                                            test_level=test_level)
 
         return test_dic
 

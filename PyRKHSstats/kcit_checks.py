@@ -89,10 +89,10 @@ if __name__ == '__main__':
     savedir = os.path.join('checks', 'KCIT')
     os.makedirs(savedir, exist_ok=True)
 
-    nb_sim = 1000
+    nb_sim = 100
 
     test_level = 0.01
-    N = 200
+    N = 300
 
     start_time = time.time()
 
@@ -114,7 +114,7 @@ if __name__ == '__main__':
             kernel_kz=example1['kernel_kz'],
             epsilon=example1['epsilon'],
             test_level=test_level,
-            scheme=ImplementedKCITSchemes.GAMMA
+            scheme=ImplementedKCITSchemes.MONTECARLO
         )
 
         values_tci[i, 0] = kcit_example1['TCI']
@@ -170,7 +170,7 @@ if __name__ == '__main__':
             kernel_kz=example2['kernel_kz'],
             epsilon=example2['epsilon'],
             test_level=test_level,
-            scheme=ImplementedKCITSchemes.GAMMA
+            scheme=ImplementedKCITSchemes.MONTECARLO
         )
 
         values_tci[i, 0] = kcit_example2['TCI']
