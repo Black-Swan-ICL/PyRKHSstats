@@ -26,7 +26,17 @@ that rely on kernels (e.g. HSIC for independence testing).
 | KCIT | For conditional independence testing | Yes | No |
 
 <br>
+
+### HSIC
+Implementations provided :
+- Gamma approximation based.
+
+### KCIT
+Implementations provided :
+- Gamma approximation based,
+- Monte Carlo simulation based.
   
+
 ## In development
 - Two-sample testing with MMD.
 - Goodness-of-fit testing.
