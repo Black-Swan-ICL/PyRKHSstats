@@ -2,7 +2,7 @@
 A Python package implementing a variety of statistical/machine learning methods 
 that rely on kernels (e.g. HSIC for independence testing).
 
-## Implemented
+## Overview
 - Independence testing with HSIC (Hilbert-Schmidt Independence Criterion) using
   the Gamma approximation, as introduced in
   [A Kernel Statistical Test of Independence](https://papers.nips.cc/paper/2007/hash/d5cfead94f5350c12c322b5b664544c1-Abstract.html), 
@@ -19,23 +19,26 @@ that rely on kernels (e.g. HSIC for independence testing).
 
 <br>
 
-| Resource | Description | Numpy based available | PyTorch based available |
+| Resource | Description | 
+| :---  | :--- | 
+| HSIC | For independence testing | 
+| HSCIC | For the measurement of conditional independence | 
+| KCIT | For conditional independence testing | 
+
+
+## Implementations available
+
+The following table details the implementation schemes for the different 
+resources available in the package.
+
+| Resource | Implementation Scheme | Numpy based available | PyTorch based available |
 | :---  | :--- | :----: |:----: |
-| HSIC | For independence testing | Yes | No |
-| HSCIC | For the measurement of conditional independence | Yes | Yes |
-| KCIT | For conditional independence testing | Yes | No |
+| HSIC | Gamma approximation | Yes | No |
+| HSCIC | N/A | Yes | Yes |
+| KCIT | Gamma approximation | Yes | No |
+| KCIT | Monte Carlo simulation (weighted sum of &chi;<sup>2</sup> random variables)| Yes | No |
 
 <br>
-
-### HSIC
-Implementations provided :
-- Gamma approximation based.
-
-### KCIT
-Implementations provided :
-- Gamma approximation based,
-- Monte Carlo simulation based.
-  
 
 ## In development
 - Two-sample testing with MMD.
