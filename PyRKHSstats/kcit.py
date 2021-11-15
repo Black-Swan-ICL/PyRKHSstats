@@ -433,4 +433,3 @@ def perform_kcit(data_x, data_y, data_z, kernel_kx, kernel_ky, kernel_kz,
 
         msg = f"Scheme '{scheme}' not implemented for KCIT."
         raise KCITTestingSchemeNotImplemented(msg)
-
