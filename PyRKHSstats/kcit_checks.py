@@ -1,10 +1,12 @@
 import os
+import yaml
 import time
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from collections import namedtuple
+from datetime import datetime
 
 from scipy.spatial.distance import pdist
 from scipy.stats import norm, gamma, laplace
@@ -12,6 +14,13 @@ from sklearn.gaussian_process.kernels import RBF
 
 from PyRKHSstats.kernel_wrapper import KernelWrapper
 from PyRKHSstats.kcit import perform_kcit, ImplementedKCITSchemes
+
+
+_cfg_name = 'name'
+_cfg_schemes = 'schemes'
+_cfg_nb_sim = 'simulation_numbers'
+_cfg_test_levels = 'test_levels'
+_cfg_nb_obs = 'sample_sizes'
 
 
 _field_values_x = 'data_x'
@@ -26,6 +35,22 @@ _field_rejection_threshold = 'Rejection threshold'
 _field_null_rejected = 'H0 Rejected'
 _field_histogram_xlabel = 'TCI'
 _field_histogram_ylabel = 'Probability density'
+
+
+def load_configuration(filepath):
+
+    with open(filepath, "r") as f:
+        config_yaml = yaml.safe_load(f)
+        f.close()
+
+    dic_cfg = dict()
+    dic_cfg[_cfg_schemes] = config_yaml[_cfg_schemes]
+    dic_cfg[_cfg_name] = config_yaml[_cfg_name]
+    dic_cfg[_cfg_nb_sim] = config_yaml[_cfg_nb_sim]
+    dic_cfg[_cfg_test_levels] = config_yaml[_cfg_test_levels]
+    dic_cfg[_cfg_nb_obs] = config_yaml[_cfg_nb_obs]
+
+    return dic_cfg
 
 
 # Low-dimensional settings example, under which CI holds true
@@ -196,13 +221,22 @@ def run_example(example, id, regime, nb_observations, nb_simulations, scheme,
 
 if __name__ == '__main__':
 
-    savedir = os.path.join('checks', 'KCIT')
+    root_checks_dir = os.path.join('checks', 'KCIT')
+    os.makedirs(root_checks_dir, exist_ok=True)
+
+    # Load a pre-defined configuration file that contains the sample sizes,
+    # number of simulations etc. to run checks for
+    cfg_file = 'GammaAndMonteCarlo-1'
+    dic_cfg = load_configuration(os.path.join(root_checks_dir, cfg_file))
+    # Create folder to house results of current runs
+    savedir = os.path.join(root_checks_dir, dic_cfg[_cfg_name])
     os.makedirs(savedir, exist_ok=True)
 
-    schemes = [ImplementedKCITSchemes.GAMMA]
-    simulation_numbers = [100, 1000]
-    test_levels = [0.05, 0.01]
-    sample_sizes = [100, 200]
+    schemes = dic_cfg[_cfg_schemes]
+    schemes = [ImplementedKCITSchemes[elt] for elt in schemes]
+    simulation_numbers = dic_cfg[_cfg_nb_sim]
+    test_levels = dic_cfg[_cfg_test_levels]
+    sample_sizes = dic_cfg[_cfg_nb_obs]
 
     examples = dict()
     example1 = namedtuple('id', 'regime')
@@ -220,11 +254,11 @@ if __name__ == '__main__':
             len(test_levels) * len(examples.keys())
     )
     arr_id = np.ndarray(shape=(nb_checks,), dtype=object)
-    arr_regime =  np.ndarray(shape=(nb_checks,), dtype=object)
+    arr_regime = np.ndarray(shape=(nb_checks,), dtype=object)
     arr_nb_obs = np.zeros(nb_checks)
     arr_level = np.zeros(nb_checks)
     arr_nb_sims = np.zeros(nb_checks)
-    arr_scheme =  np.ndarray(shape=(nb_checks,), dtype=object)
+    arr_scheme = np.ndarray(shape=(nb_checks,), dtype=object)
     arr_h0_reject = np.zeros(nb_checks)
     arr_time = np.zeros(nb_checks)
 
@@ -267,5 +301,7 @@ if __name__ == '__main__':
     df_summary_checks['Scheme'] = arr_scheme
     df_summary_checks['Proportion H0 Rejected'] = arr_h0_reject / arr_nb_sims
     df_summary_checks['Time Taken in seconds'] = arr_time
+    # To timestamp a run
+    df_summary_checks['Timestamp Completion Checks'] = str(datetime.now())
     summary_filename = os.path.join(savedir, 'summary_checks.csv')
     df_summary_checks.to_csv(summary_filename, index=False)
