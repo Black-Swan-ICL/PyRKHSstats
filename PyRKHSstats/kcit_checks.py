@@ -12,6 +12,20 @@ from PyRKHSstats.kernel_wrapper import KernelWrapper
 from PyRKHSstats.kcit import perform_kcit, ImplementedKCITSchemes
 
 
+_field_values_x = 'data_x'
+_field_values_y = 'data_y'
+_field_values_z = 'data_z'
+_field_kernel_x = 'kernel_kx'
+_field_kernel_y = 'kernel_ky'
+_field_kernel_z = 'kernel_kz'
+_field_regularisation_constant = 'epsilon'
+_field_values_tci = 'TCI'
+_field_rejection_threshold = 'Rejection threshold'
+_field_null_rejected = 'H0 Rejected'
+_field_histogram_xlabel = 'TCI'
+_field_histogram_ylabel = 'Probability density'
+
+
 def generate_low_dimensional_ci_example(nb_observations):
 
     # Low-dimensional where CI holds true
@@ -37,13 +51,13 @@ def generate_low_dimensional_ci_example(nb_observations):
     epsilon = 0.001
 
     example = dict()
-    example['data_x'] = data_x
-    example['data_y'] = data_y
-    example['data_z'] = data_z
-    example['kernel_kx'] = kernel_kx
-    example['kernel_ky'] = kernel_ky
-    example['kernel_kz'] = kernel_kz
-    example['epsilon'] = epsilon
+    example[_field_values_x] = data_x
+    example[_field_values_y] = data_y
+    example[_field_values_z] = data_z
+    example[_field_kernel_x] = kernel_kx
+    example[_field_kernel_y] = kernel_ky
+    example[_field_kernel_z] = kernel_kz
+    example[_field_regularisation_constant] = epsilon
 
     return example
 
@@ -73,15 +87,63 @@ def generate_low_dimensional_not_ci_example(nb_observations):
     epsilon = 0.001
 
     example = dict()
-    example['data_x'] = data_x
-    example['data_y'] = data_y
-    example['data_z'] = data_z
-    example['kernel_kx'] = kernel_kx
-    example['kernel_ky'] = kernel_ky
-    example['kernel_kz'] = kernel_kz
-    example['epsilon'] = epsilon
+    example[_field_values_x] = data_x
+    example[_field_values_y] = data_y
+    example[_field_values_z] = data_z
+    example[_field_kernel_x] = kernel_kx
+    example[_field_kernel_y] = kernel_ky
+    example[_field_kernel_z] = kernel_kz
+    example[_field_regularisation_constant] = epsilon
 
     return example
+
+
+def generate_example_data(example_to_run, nb_observations, nb_simulations, scheme,
+                          test_level):
+
+    values_tci = np.zeros((nb_simulations, 1))
+    values_threshold = np.zeros((nb_simulations, 1))
+    values_rejection = np.zeros((nb_simulations, 1))
+
+    for i in range(nb_simulations):
+
+        example = example_to_run(nb_observations=nb_observations)
+
+        kcit_example = perform_kcit(
+            data_x=example[_field_values_x],
+            data_y=example[_field_values_y],
+            data_z=example[_field_values_z],
+            kernel_kx=example[_field_kernel_x],
+            kernel_ky=example[_field_kernel_y],
+            kernel_kz=example[_field_kernel_z],
+            epsilon=example[_field_regularisation_constant],
+            test_level=test_level,
+            scheme=scheme
+        )
+
+        values_tci[i, 0] = kcit_example[_field_values_tci]
+        values_threshold[i, 0] = kcit_example[_field_rejection_threshold]
+        values_rejection[i, 0] = (
+            1 if values_tci[i, 0] > values_threshold[i, 0] else 0
+        )
+
+    df_example = pd.DataFrame()
+    df_example[_field_values_tci] = values_tci[:, 0]
+    df_example[_field_rejection_threshold] = values_threshold[:, 0]
+    df_example[_field_null_rejected] = values_rejection[:, 0]
+
+    return df_example
+
+
+def generate_example_plots(data, xlabel, ylabel, title):
+
+    fig, ax = plt.subplots()
+    ax.hist(data, bins='auto', density=True, stacked=True)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+
+    return fig
 
 
 if __name__ == '__main__':
@@ -89,44 +151,21 @@ if __name__ == '__main__':
     savedir = os.path.join('checks', 'KCIT')
     os.makedirs(savedir, exist_ok=True)
 
-    nb_sim = 100
+    nb_sim = 1000
 
     test_level = 0.01
-    N = 300
+    N = 100
 
     start_time = time.time()
 
-    # Example I : low-dimensioanl settings, CI holds true
-    values_tci = np.zeros((nb_sim, 1))
-    values_threshold = np.zeros((nb_sim, 1))
-    values_rejection = np.zeros((nb_sim, 1))
-
-    for i in range(nb_sim):
-
-        example1 = generate_low_dimensional_ci_example(nb_observations=N)
-
-        kcit_example1 = perform_kcit(
-            data_x=example1['data_x'],
-            data_y=example1['data_y'],
-            data_z=example1['data_z'],
-            kernel_kx=example1['kernel_kx'],
-            kernel_ky=example1['kernel_ky'],
-            kernel_kz=example1['kernel_kz'],
-            epsilon=example1['epsilon'],
-            test_level=test_level,
-            scheme=ImplementedKCITSchemes.MONTECARLO
-        )
-
-        values_tci[i, 0] = kcit_example1['TCI']
-        values_threshold[i, 0] = kcit_example1['Rejection threshold']
-        values_rejection[i, 0] = (
-            1 if values_tci[i, 0] > values_threshold[i, 0] else 0
-        )
-
-    df_example1 = pd.DataFrame()
-    df_example1['TCI'] = values_tci[:, 0]
-    df_example1['Rejection Threshold'] = values_threshold[:, 0]
-    df_example1['H0 Rejected'] = values_rejection[:, 0]
+    # Example I : low-dimensional settings, CI holds true
+    df_example1 = generate_example_data(
+        example_to_run=generate_low_dimensional_ci_example,
+        nb_observations=N,
+        nb_simulations=nb_sim,
+        scheme=ImplementedKCITSchemes.GAMMA,
+        test_level=test_level
+    )
     csv_filename = os.path.join(
         savedir,
         (
@@ -136,12 +175,14 @@ if __name__ == '__main__':
     )
     df_example1.to_csv(csv_filename, index=False)
 
-    plt.hist(values_tci[:, 0], bins='auto', density=True, stacked=True)
-    plt.xlabel('TCI')
-    plt.ylabel('Probability density')
     title = f'Empirical TCI density under H0 with {N} observations, over ' \
             f'{nb_sim} simulations.'
-    plt.title(title)
+    fig = generate_example_plots(
+        data=df_example1[_field_values_tci].values,
+        xlabel=_field_histogram_xlabel,
+        ylabel=_field_histogram_ylabel,
+        title=title
+    )
     plot_filename = os.path.join(
         savedir,
         (
@@ -149,40 +190,17 @@ if __name__ == '__main__':
             f'{test_level}_test_level_run.png'
         )
     )
-    plt.savefig(plot_filename)
+    fig.savefig(plot_filename)
     plt.close()
 
     # Example II : low-dimensional, CI does not hold
-    values_tci = np.zeros((nb_sim, 1))
-    values_threshold = np.zeros((nb_sim, 1))
-    values_rejection = np.zeros((nb_sim, 1))
-
-    for i in range(nb_sim):
-
-        example2 = generate_low_dimensional_not_ci_example(nb_observations=N)
-
-        kcit_example2 = perform_kcit(
-            data_x=example2['data_x'],
-            data_y=example2['data_y'],
-            data_z=example2['data_z'],
-            kernel_kx=example2['kernel_kx'],
-            kernel_ky=example2['kernel_ky'],
-            kernel_kz=example2['kernel_kz'],
-            epsilon=example2['epsilon'],
-            test_level=test_level,
-            scheme=ImplementedKCITSchemes.MONTECARLO
-        )
-
-        values_tci[i, 0] = kcit_example2['TCI']
-        values_threshold[i, 0] = kcit_example2['Rejection threshold']
-        values_rejection[i, 0] = (
-            1 if values_tci[i, 0] > values_threshold[i, 0] else 0
-        )
-
-    df_example2 = pd.DataFrame()
-    df_example2['TCI'] = values_tci[:, 0]
-    df_example2['Rejection Threshold'] = values_threshold[:, 0]
-    df_example2['H0 Rejected'] = values_rejection[:, 0]
+    df_example2 = generate_example_data(
+        example_to_run=generate_low_dimensional_not_ci_example,
+        nb_observations=N,
+        nb_simulations=nb_sim,
+        scheme=ImplementedKCITSchemes.GAMMA,
+        test_level=test_level
+    )
     csv_filename = os.path.join(
         savedir,
         (
@@ -192,12 +210,14 @@ if __name__ == '__main__':
     )
     df_example2.to_csv(csv_filename, index=False)
 
-    plt.hist(values_tci[:, 0], bins='auto', density=True, stacked=True)
-    plt.xlabel('TCI')
-    plt.ylabel('Probability density')
     title = f'Empirical TCI density under H1 with {N} observations, over ' \
             f'{nb_sim} simulations.'
-    plt.title(title)
+    fig = generate_example_plots(
+        data=df_example2[_field_values_tci].values,
+        xlabel=_field_histogram_xlabel,
+        ylabel=_field_histogram_ylabel,
+        title=title
+    )
     plot_filename = os.path.join(
         savedir,
         (
@@ -205,7 +225,7 @@ if __name__ == '__main__':
             f'{test_level}_test_level_run.png'
         )
     )
-    plt.savefig(plot_filename)
+    fig.savefig(plot_filename)
     plt.close()
 
     end_time = time.time()
