@@ -166,7 +166,7 @@ def generate_example_data(example_to_run, nb_observations, nb_simulations,
 
 def generate_example_plots(data, xlabel, ylabel, title):
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(16, 10))
     ax.hist(data, bins='auto', density=True, stacked=True)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
@@ -191,7 +191,7 @@ def run_example(example, id, regime, nb_observations, nb_simulations, scheme,
     nb_h0_rejected = np.sum(df_example[_field_null_rejected].values)
     # Persist the data
     csv_filename = (
-            f'KCIT_{id}_{nb_observations}_observations' +
+            f'KCIT_{id}_{scheme.name}_scheme_{nb_observations}_observations' +
             f'_{nb_simulations}_simulations_{test_level}_level.csv'
     )
     csv_filename = os.path.join(savedir, csv_filename)
@@ -199,7 +199,7 @@ def run_example(example, id, regime, nb_observations, nb_simulations, scheme,
 
     # Draw the histogram
     title = (
-        f'Empirical TCI density under {regime} with ' +
+        f'Empirical TCI density, {scheme.value} scheme, under {regime} with ' +
         f'{nb_observations} observations, over {nb_simulations} simulations.'
     )
     fig = generate_example_plots(
@@ -209,8 +209,8 @@ def run_example(example, id, regime, nb_observations, nb_simulations, scheme,
         title=title
     )
     plot_filename = (
-        f'TCI_histogram_{id}_{nb_observations}_observations_' +
-        f'{nb_simulations}_simulations_{test_level}_test_level_run.png'
+        f'TCI_histogram_{id}_{scheme.name}_scheme_{nb_observations}_observa' +
+        f'tions_{nb_simulations}_simulations_{test_level}_test_level_run.png'
     )
     plot_filename = os.path.join(savedir, plot_filename)
     fig.savefig(plot_filename)
@@ -226,7 +226,7 @@ if __name__ == '__main__':
 
     # Load a pre-defined configuration file that contains the sample sizes,
     # number of simulations etc. to run checks for
-    cfg_file = 'GammaAndMonteCarlo-1'
+    cfg_file = 'config0.yaml'
     dic_cfg = load_configuration(os.path.join(root_checks_dir, cfg_file))
     # Create folder to house results of current runs
     savedir = os.path.join(root_checks_dir, dic_cfg[_cfg_name])
