@@ -6,10 +6,9 @@ Sriperumbudur (NIPS #22, 2009) and 'A Kernel Two-Sample Test', A. Gretton,
 K. M. Borgwardt, M. J. Rasch, B. Sch\"{o}lkopf and A. Smola (Journal of
 Machine Learning Research #13, 2012).
 """
-import math
+import numpy as np
 
 
-# TODO check how fast/slow code is
 def compute_unbiased_squared_mmd(data_x, data_y, kernel):
     """
     Computes the unbiased estimate of the squared Maximum Mean Discrepancy
@@ -46,27 +45,20 @@ def compute_unbiased_squared_mmd(data_x, data_y, kernel):
 
     if nx == ny:
 
-        for i in range(nx):
-            mat_Kx[i, i] = 0
-            mat_Ky[i, i] = 0
-            mat_Kxy[i, i] = 0
-
-        unbiased_mmd = mat_Kx.sum() + mat_Ky.sum() - 2 * mat_Kxy.sum()
+        unbiased_mmd = (
+                mat_Kx.sum() - np.diagonal(mat_Kx).sum() +
+                mat_Ky.sum() - np.diagonal(mat_Ky).sum() -
+                2 * (mat_Kxy.sum() - np.diagonal(mat_Kxy).sum())
+        )
         unbiased_mmd /= (nx * (nx - 1))
 
         return unbiased_mmd
 
     else:
 
-        for i in range(nx):
-            mat_Kx[i, i] = 0
-
-        for i in range(ny):
-            mat_Ky[i, i] = 0
-
         unbiased_mmd = (
-                mat_Kx.sum() / (nx * (nx - 1)) +
-                mat_Ky.sum() / (ny * (ny - 1)) -
+                (mat_Kx.sum() - np.diagonal(mat_Kx).sum()) / (nx * (nx - 1)) +
+                (mat_Ky.sum() - np.diagonal(mat_Ky).sum()) / (ny * (ny - 1)) -
                 2 * mat_Kxy.sum() / (nx * ny)
         )
 
