@@ -1,0 +1,6 @@
+name : 'TestWithMMDb'
+sample_sizes_x_y :
+  - nb_observations_x : 50
+    nb_observations_y : 50
+simulation_numbers :
+  - 2000

@@ -15,7 +15,7 @@ from scipy.stats import norm, gamma, laplace
 from sklearn.gaussian_process.kernels import RBF
 
 from PyRKHSstats.kernel_wrapper import KernelWrapper
-from PyRKHSstats.mmd import compute_unbiased_squared_mmd, compute_biased_mmd
+from PyRKHSstats.mmd import compute_unbiased_squared_mmd, compute_biased_squared_mmd
 
 
 _cfg_name = 'name'
@@ -234,22 +234,22 @@ if __name__ == '__main__':
         for nb_obs_x_y in sample_sizes_x_y:
 
             time_taken = run_example(
-                example=examples[example2],
-                id=example2.id,
-                regime=example2.regime,
-                mmd_function=compute_unbiased_squared_mmd,
-                mmd_function_name='MMDu^2',
+                example=examples[example1],
+                id=example1.id,
+                regime=example1.regime,
+                mmd_function=compute_biased_squared_mmd,
+                mmd_function_name='MMDb^2',
                 nb_observations_x=nb_obs_x_y[_cfg_nb_obs_x],
                 nb_observations_y=nb_obs_x_y[_cfg_nb_obs_y],
                 nb_simulations=nb_simulations,
                 savedir=savedir
             )
-            arr_id[iter] = example2.id
-            arr_regime[iter] = example2.regime
+            arr_id[iter] = example1.id
+            arr_regime[iter] = example1.regime
             arr_nb_obs_x[iter] = nb_obs_x_y[_cfg_nb_obs_x]
             arr_nb_obs_y[iter] = nb_obs_x_y[_cfg_nb_obs_y]
             arr_nb_sims[iter] = nb_simulations
-            arr_mmd_func[iter] = 'MMDu^2'
+            arr_mmd_func[iter] = 'MMDb^2'
             arr_time[iter] = time_taken
 
             iter += 1
