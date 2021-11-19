@@ -1,6 +1,8 @@
 import os
 import yaml
 import time
+import argparse
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -224,12 +226,24 @@ if __name__ == '__main__':
     root_checks_dir = os.path.join('checks', 'KCIT')
     os.makedirs(root_checks_dir, exist_ok=True)
 
+    parser = argparse.ArgumentParser(
+        description='Run checks for the KCIT tools implemented.'
+    )
+    parser.add_argument(
+        'config_file',
+        type=str,
+        help='Name of the configuration file to use for the run.'
+    )
+    args = parser.parse_args()
+
     # Load a pre-defined configuration file that contains the sample sizes,
     # number of simulations etc. to run checks for
-    cfg_file = 'config0.yaml'
-    dic_cfg = load_configuration(os.path.join(root_checks_dir, cfg_file))
+    cfg_file = args.config_file
+    dic_cfg = load_configuration(
+        os.path.join(root_checks_dir, cfg_file)
+    )
     # Create folder to house results of current runs
-    savedir = os.path.join(root_checks_dir, dic_cfg[_cfg_name])
+    savedir = os.path.join(root_checks_dir, 'Runs', dic_cfg[_cfg_name])
     os.makedirs(savedir, exist_ok=True)
 
     schemes = dic_cfg[_cfg_schemes]

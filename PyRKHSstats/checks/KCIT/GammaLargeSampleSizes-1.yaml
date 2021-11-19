@@ -1,0 +1,13 @@
+name : "GammaLargeSampleSizes-1"
+schemes :
+  - 'GAMMA'
+simulation_numbers :
+  - 100
+test_levels :
+  - 0.01
+sample_sizes :
+  - 100
+  - 200
+  - 300
+  - 400
+  - 500
