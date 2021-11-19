@@ -223,7 +223,9 @@ def run_example(example, id, regime, nb_observations, nb_simulations, scheme,
 
 if __name__ == '__main__':
 
-    root_checks_dir = os.path.join('checks', 'KCIT')
+    root_checks_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'checks', 'KCIT'
+    )
     os.makedirs(root_checks_dir, exist_ok=True)
 
     parser = argparse.ArgumentParser(
