@@ -133,3 +133,4 @@ dmypy.json
 
 # Do not persist the csv's & plots from the Checks, but do persist the configs
 PyRKHSstats/checks/KCIT/Runs/
+PyRKHSstats/checks/MMD/Runs/

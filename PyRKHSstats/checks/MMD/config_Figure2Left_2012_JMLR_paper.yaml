@@ -1,0 +1,6 @@
+name : 'Figure2Left_2012_JMLR_Paper'
+sample_sizes_x_y :
+  - nb_observations_x : 50
+    nb_observations_y : 50
+simulation_numbers :
+  - 2000
