@@ -73,10 +73,10 @@ def compute_unbiased_squared_mmd(data_x, data_y, kernel):
         return unbiased_mmd
 
 
-def compute_biased_mmd(data_x, data_y, kernel):
+def compute_biased_squared_mmd(data_x, data_y, kernel):
     """
-    Computes the biased estimate of the Maximum Mean Discrepancy between
-    :math:`\text{P}_{\text{X}}` and :math:`\text{P}_{\text{Y}}`.
+    Computes the biased estimate of the squared Maximum Mean Discrepancy
+    between :math:`\text{P}_{\text{X}}` and :math:`\text{P}_{\text{Y}}`.
 
     Parameters
     ----------
@@ -90,7 +90,7 @@ def compute_biased_mmd(data_x, data_y, kernel):
     Returns
     -------
     float
-        The biased estimate of the MMD.
+        The biased estimate of the squared MMD.
     """
     nx = data_x.shape[0]
     ny = data_y.shape[0]
@@ -99,10 +99,10 @@ def compute_biased_mmd(data_x, data_y, kernel):
     mat_Ky = kernel.compute_kernelised_gram_matrix(data_y)
     mat_Kxy = kernel.compute_rectangular_kernel_matrix(data_x, data_y)
 
-    biased_mmd = math.sqrt(
-        mat_Kx.sum() / (nx * nx) +
-        mat_Ky.sum() / (ny * ny) -
-        2 * mat_Kxy.sum() / (nx * ny)
+    biased_mmd = (
+            mat_Kx.sum() / (nx * nx) +
+            mat_Ky.sum() / (ny * ny) -
+            2 * mat_Kxy.sum() / (nx * ny)
     )
 
     return biased_mmd
