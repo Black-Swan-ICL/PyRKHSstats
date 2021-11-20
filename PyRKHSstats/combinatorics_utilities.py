@@ -49,3 +49,23 @@ def ordered_combinations(m, n):
     l_ordered_combinations = list(chain.from_iterable(l_ordered_combinations))
 
     return l_ordered_combinations
+
+
+def check_permutation_strict(indices):
+    """
+    Checks whether a permutation of indices is a strict permutation i.e. that
+    :math:`\forall~ i, indices[i] \neq i`.
+
+    Parameters
+    ----------
+    indices : array_like
+        The candidate permutation.
+
+    Returns
+    -------
+    bool
+        Whether the permutation is a strict permutation.
+    """
+    natural_indices = np.asarray(range(len(indices)))
+
+    return all(np.asarray(indices) != natural_indices)

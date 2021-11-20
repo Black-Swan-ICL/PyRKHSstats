@@ -3,7 +3,7 @@ import pytest
 from numpy import isclose
 
 from PyRKHSstats.combinatorics_utilities import n_permute_m, \
-    ordered_combinations
+    ordered_combinations, check_permutation_strict
 
 
 @pytest.mark.parametrize(
@@ -58,3 +58,17 @@ def test_ordered_combinations(m, n, expected):
     actual = ordered_combinations(m, n)
 
     assert set(expected) == set(actual)
+
+
+@pytest.mark.parametrize(
+    "indices,expected",
+    [
+        ([3, 2, 1, 0], True),
+        ([1, 0, 3, 2], True),
+        ([0, 1, 2, 3], False),
+        ([0, 3, 2, 1], False),
+    ]
+)
+def test_check_permutation_strict(indices, expected):
+
+    assert check_permutation_strict(indices=indices) == expected
