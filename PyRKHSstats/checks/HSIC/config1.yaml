@@ -2,7 +2,7 @@ name : "Checks-1"
 schemes :
   - 'GAMMA'
 simulation_numbers :
-  - 100
+  - 500
 test_levels :
   - 0.01
 sample_sizes :
