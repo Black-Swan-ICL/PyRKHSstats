@@ -12,7 +12,7 @@ from collections import namedtuple
 from datetime import datetime
 
 from scipy.spatial.distance import pdist
-from scipy.stats import norm, gamma
+from scipy.stats import norm, gamma, multivariate_normal, multivariate_t
 from sklearn.gaussian_process.kernels import RBF
 
 from PyRKHSstats.kernel_wrapper import KernelWrapper
@@ -86,6 +86,66 @@ def generate_low_dim_dependence_example(nb_observations):
     length_scale_kx = np.median(np.abs(pdist(data_x)))
     kernel_kx = KernelWrapper(RBF(length_scale=length_scale_kx))
     kernel_ky = copy.deepcopy(kernel_kx)
+
+    example = dict()
+    example[_field_values_x] = data_x
+    example[_field_values_y] = data_y
+    example[_field_kernel_x] = kernel_kx
+    example[_field_kernel_y] = kernel_ky
+
+    return example
+
+
+def generate_high_dim_independence_example(nb_observations):
+
+    # Two independent N_3(0, I) samples
+    data_x = multivariate_normal.rvs(
+        mean=[0, 0, 0],
+        cov=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        size=nb_observations
+    )
+    data_y = multivariate_normal.rvs(
+        mean=[0, 0, 0],
+        cov=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        size=nb_observations
+    )
+
+    # Two RBF kernels with the median heuristic
+    length_scale_kx = np.median(np.abs(pdist(data_x)))
+    kernel_kx = KernelWrapper(RBF(length_scale=length_scale_kx))
+    length_scale_ky = np.median(np.abs(pdist(data_y)))
+    kernel_ky = KernelWrapper(RBF(length_scale=length_scale_ky))
+
+    example = dict()
+    example[_field_values_x] = data_x
+    example[_field_values_y] = data_y
+    example[_field_kernel_x] = kernel_kx
+    example[_field_kernel_y] = kernel_ky
+
+    return example
+
+
+def generate_high_dim_dependence_example(nb_observations):
+
+    data_x = multivariate_t.rvs(
+        loc=[0, 0, 0],
+        shape=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        df=2.5,
+        size=nb_observations
+    )
+    data_y = copy.deepcopy(data_x)
+    data_y += multivariate_t.rvs(
+        loc=[0.1, 0.2, 0.3],
+        shape=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        df=2.4,
+        size=nb_observations
+    )
+
+    # Two RBF kernels with the median heuristic
+    length_scale_kx = np.median(np.abs(pdist(data_x)))
+    kernel_kx = KernelWrapper(RBF(length_scale=length_scale_kx))
+    length_scale_ky = np.median(np.abs(pdist(data_y)))
+    kernel_ky = KernelWrapper(RBF(length_scale=length_scale_ky))
 
     example = dict()
     example[_field_values_x] = data_x
@@ -225,13 +285,21 @@ if __name__ == "__main__":
 
     examples = dict()
     example1 = namedtuple('id', 'regime')
-    example1.id = 'Example1'
+    example1.id = 'LowDimIndependence'
     example1.regime = 'H0'
     examples[example1] = generate_low_dim_independence_example
     example2 = namedtuple('id', 'regime')
-    example2.id = 'Example2'
+    example2.id = 'LowDimDependence'
     example2.regime = 'H1'
     examples[example2] = generate_low_dim_dependence_example
+    example3 = namedtuple('id', 'regime')
+    example3.id = 'HighDimInDependence'
+    example3.regime = 'H0'
+    examples[example3] = generate_high_dim_independence_example
+    example4 = namedtuple('id', 'regime')
+    example4.id = 'HighDimDependence'
+    example4.regime = 'H1'
+    examples[example4] = generate_high_dim_dependence_example
 
     # Prepare for the collection of information about the checks
     nb_checks = (
