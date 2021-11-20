@@ -5,7 +5,7 @@ from math import sqrt, log
 
 from sklearn.gaussian_process.kernels import RBF, DotProduct
 
-from PyRKHSstats.hsic import compute_squared_norm_mean_embedding, biased_hsic
+from PyRKHSstats.hsic import compute_squared_norm_mean_embedding, compute_biased_hsic
 from PyRKHSstats.kernel_wrapper import KernelWrapper
 
 
@@ -94,10 +94,10 @@ def test_compute_squared_norm_mean_embedding(data, kernel, expected, precision):
 def test_biased_hsic(data_x, data_y, kernel_k, kernel_l, expec_hsic, expec_K,
                      expec_L, precision):
 
-    actual = biased_hsic(data_x=data_x,
-                         data_y=data_y,
-                         kernel_k=kernel_k,
-                         kernel_l=kernel_l)
+    actual = compute_biased_hsic(data_x=data_x,
+                                 data_y=data_y,
+                                 kernel_kx=kernel_k,
+                                 kernel_ky=kernel_l)
 
     assert (
             np.isclose(actual['HSIC'], expec_hsic, atol=precision) and

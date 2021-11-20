@@ -1,0 +1,9 @@
+name : "Checks-0"
+schemes :
+  - 'GAMMA'
+simulation_numbers :
+  - 1000
+test_levels :
+  - 0.01
+sample_sizes :
+  - 100

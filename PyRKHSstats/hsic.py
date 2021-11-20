@@ -1,4 +1,3 @@
-# TODO reformat docstrings
 """
 This module contains the code to compute the HSIC and related quantities,
 using the tools developed in 'A Kernel Statistical Test of Independence', A.
@@ -7,10 +6,23 @@ Gretton, K. Fukumizu, C. Hui Teo, L. Song, B. Scholkopf & A. J. Smola
 """
 import numpy as np
 
+from enum import Enum, unique
+
+from scipy.stats import gamma
+
 from PyRKHSstats.combinatorics_utilities import n_permute_m, \
     ordered_combinations
-
 from PyRKHSstats.kernel_wrapper import KernelWrapper
+
+
+@unique
+class ImplementedHSICScheme(Enum):
+    GAMMA = 'Gamma Approximation'
+
+
+class HSICTestingSchemeNotImplemented(Exception):
+    """Raised when the user requests a scheme for HSIC that is not implemented.
+    """
 
 
 def compute_squared_norm_mean_embedding(data, kernel):
@@ -43,7 +55,7 @@ def compute_squared_norm_mean_embedding(data, kernel):
     return res
 
 
-def biased_hsic(data_x, data_y, kernel_k, kernel_l):
+def compute_biased_hsic(data_x, data_y, kernel_kx, kernel_ky):
     """
     Computes the biased empirical estimate of the Hilbert-Schmidt Independence
     Criterion (HSIC), as defined by equation (4) in the paper. Returns it along
@@ -53,25 +65,27 @@ def biased_hsic(data_x, data_y, kernel_k, kernel_l):
     Parameters
     ----------
     data_x : array_like
-        The observations in X space.
+        The observations in :math:`\mathcal{X}` space.
     data_y : array_like
-        The observations in Y space.
-    kernel_k : KernelWrapper
-        The reproducing kernel associated to the RKHS on domain X.
-    kernel_l : KernelWrapper
-        The reproducing kernel associated to the RKHS on domain Y.
+        The observations in :math:`\mathcal{Y}` space.
+    kernel_kx : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{X}`.
+    kernel_ky : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Y}`.
 
     Returns
     -------
     dic
-        A dictionary containing the biased empirical estimate of the hsic, the
-        k-kernelised Gram matrix, the l-kernelised Gram matrix and the centering
-        matrix H.
+        A dictionary containing the biased empirical estimate of HSIC, the
+        kernel Gram matrices :math:`\text{K}_{\text{X}}` and
+        :math:`\text{K}_{\text{Y}}` and the centering matrix :math:`\text{H}`.
     """
     m = data_x.shape[0]
 
-    mat_K = kernel_k.compute_kernelised_gram_matrix(data_x)
-    mat_L = kernel_l.compute_kernelised_gram_matrix(data_y)
+    mat_K = kernel_kx.compute_kernelised_gram_matrix(data_x)
+    mat_L = kernel_ky.compute_kernelised_gram_matrix(data_y)
     mat_H = np.identity(m) - (1/m) * np.ones((m, m))
 
     hsic = (1/m)**2 * np.trace(mat_K @ mat_H @ mat_L @ mat_H)
@@ -85,33 +99,36 @@ def biased_hsic(data_x, data_y, kernel_k, kernel_l):
     return dic
 
 
-def compute_estimate_biased_hsic_mean(data_x, data_y, kernel_k, kernel_l):
+def compute_estimate_biased_hsic_mean(data_x, data_y, kernel_kx, kernel_ky):
     """
     Computes an empirical estimate of the expectation of the Hilbert-Schmidt
-    Independence Criterion under H_0.
+    Independence Criterion under :math:`\text{H}_0`.
 
     Parameters
     ----------
     data_x : array_like
-        The observations in X space.
+        The observations in :math:`\mathcal{X}` space.
     data_y : array_like
-        The observations in Y space.
-    kernel_k : KernelWrapper
-        The reproducing kernel associated to the RKHS on domain X.
-    kernel_l : KernelWrapper
-        The reproducing kernel associated to the RKHS on domain Y.
+        The observations in :math:`\mathcal{Y}` space.
+    kernel_kx : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{X}`.
+    kernel_ky : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Y}`.
 
     Returns
     -------
     float
-        An empirical estimate of the expectation of HSIC under H_0.
+        An empirical estimate of the expectation of HSIC under
+        :math:`\text{H}_0`.
     """
     m = data_x.shape[0]
 
     squared_norm_mu_x = compute_squared_norm_mean_embedding(data=data_x,
-                                                            kernel=kernel_k)
+                                                            kernel=kernel_kx)
     squared_norm_mu_y = compute_squared_norm_mean_embedding(data=data_y,
-                                                            kernel=kernel_l)
+                                                            kernel=kernel_ky)
     biased_hsic_mean = (1 / m) * (1 + squared_norm_mu_x * squared_norm_mu_y -
                                   squared_norm_mu_x - squared_norm_mu_y)
 
@@ -121,21 +138,22 @@ def compute_estimate_biased_hsic_mean(data_x, data_y, kernel_k, kernel_l):
 def compute_estimate_biased_hsic_variance(mat_K, mat_L, mat_H):
     """
     Computes an empirical estimate of the variance of the Hilbert-Schmidt
-    Independence Criterion under H_0.
+    Independence Criterion under :math:`\text{H}_0`.
 
     Parameters
     ----------
     mat_K : array_like
-        The kernelised Gram matrix (kernel_k(data_x[i], data_x[j]))_{i, j}.
+        The kernel Gram matrix :math:`\text{K}_{\text{X}}`.
     mat_L : array_like
-        The kernelised Gram matrix (kernel_l(data_y[i], data_y[j]))_{i, j}.
+        The kernel Gram matrix :math:`\text{K}_{\text{Y}}`.
     mat_H : array_like
         The centering matrix.
 
     Returns
     -------
     float
-        An empirical estimate of the variance of HSIC under H_0.
+        An empirical estimate of the variance of HSIC under
+        :math:`\text{H}_0`.
     """
     m = mat_K.shape[0]
 
@@ -151,3 +169,157 @@ def compute_estimate_biased_hsic_variance(mat_K, mat_L, mat_H):
     ).flatten()[0]
 
     return biased_hsic_variance
+
+
+def calibrate_hsic_gamma_approximation(data_x, data_y, kernel_kx, kernel_ky,
+                                       mat_K, mat_L, mat_H):
+    """
+    Returns a calibrated, frozen Gamma distribution, ready for use for Gamma
+    approximation in HSIC independence testing.
+
+    Parameters
+    ----------
+    data_x : array_like
+        The observations in :math:`\mathcal{X}` space.
+    data_y : array_like
+        The observations in :math:`\mathcal{Y}` space.
+    kernel_kx : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{X}`.
+    kernel_ky : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Y}`.
+    mat_K : array_like
+        The kernel Gram matrix :math:`\text{K}_{\text{X}}`.
+    mat_L : array_like
+        The kernel Gram matrix :math:`\text{K}_{\text{Y}}`.
+    mat_H : array_like
+        The centering matrix.
+
+    Returns
+    -------
+    scipy.stats._distn_infrastructure.rv_frozen
+        The Gamma distribution, calibrated and ready to use for the so-called
+        Gamma approximation in HSIC independence testing.
+    """
+    biased_hsic_mean = compute_estimate_biased_hsic_mean(data_x=data_x,
+                                                         data_y=data_y,
+                                                         kernel_kx=kernel_kx,
+                                                         kernel_ky=kernel_ky)
+    biased_hsic_variance = compute_estimate_biased_hsic_variance(mat_K=mat_K,
+                                                                 mat_L=mat_L,
+                                                                 mat_H=mat_H)
+    m = data_x.shape[0]
+    alpha = biased_hsic_mean**2 / biased_hsic_variance
+    beta = m * biased_hsic_variance / biased_hsic_mean
+
+    return gamma(alpha, loc=0, scale=beta)
+
+
+def perform_gamma_approximation_hsic_independence_testing(
+        data_x, data_y, kernel_kx, kernel_ky, hsic_func=compute_biased_hsic,
+        test_level=0.01):
+    """
+
+    Parameters
+    ----------
+    data_x : array_like
+        The observations in :math:`\mathcal{X}` space.
+    data_y : array_like
+        The observations in :math:`\mathcal{Y}` space.
+    kernel_kx : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{X}`.
+    kernel_ky : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Y}`.
+    hsic_func : callable
+        The function used to compute the HSIC.
+    test_level : float
+        The upper bound on the probability of error or type I we may accept.
+
+    Returns
+    -------
+    dic
+        A dictionary containing the value of HSIC, the threshold for acceptance
+        of the test, a boolean indicating whether to reject the null
+        hypothesis of independence of x and y as well as the calibrated
+        Gamma distribution used.
+    """
+    dic = hsic_func(data_x, data_y, kernel_kx, kernel_ky)
+    hsic = dic['HSIC']
+    mat_K = dic['K']
+    mat_L = dic['L']
+    mat_H = dic['H']
+    m = mat_K.shape[0]
+
+    # Calibrate the Gamma approximation to the distribution of HSIC under H_0
+    calibrated_gamma = calibrate_hsic_gamma_approximation(
+        data_x=data_x,
+        data_y=data_y,
+        kernel_kx=kernel_kx,
+        kernel_ky=kernel_ky,
+        mat_K=mat_K,
+        mat_L=mat_L,
+        mat_H=mat_H
+    )
+    threshold = calibrated_gamma.ppf(1 - test_level).flatten()[0]
+
+    dic = dict()
+    dic['Reject H0 (H0 : X _||_ Y | Z)'] = m * hsic > threshold
+    dic['HSIC'] = m * hsic  # NOT an error : it is m HSIC that follows a Gamma
+    dic['Rejection threshold'] = threshold
+    dic['Gamma distribution'] = calibrated_gamma
+
+    return dic
+
+
+def perform_hsic_independence_testing(data_x, data_y, kernel_kx, kernel_ky,
+                                      test_level, scheme):
+    """
+    Performs the HSIC unconditional independence test using the scheme
+    specified by the user.
+
+    Parameters
+    ----------
+    data_x : array_like
+        The observations in :math:`\mathcal{X}` space.
+    data_y : array_like
+        The observations in :math:`\mathcal{Y}` space.
+    kernel_kx : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{X}`.
+    kernel_ky : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Y}`.
+    test_level : float
+        The level of the test.
+    scheme : ImplementedHSICScheme
+        The testing scheme to use.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the result of the test and additional
+        information.
+    """
+
+    if scheme is ImplementedHSICScheme.GAMMA:
+
+        test_dic = perform_gamma_approximation_hsic_independence_testing(
+            data_x=data_x,
+            data_y=data_y,
+            kernel_kx=kernel_kx,
+            kernel_ky=kernel_ky,
+            test_level=test_level
+        )
+
+        return test_dic
+
+    else:
+
+        msg = (
+            f"Scheme '{scheme}' not implemented for HSIC-based " +
+            "independence testing."
+        )
+        raise HSICTestingSchemeNotImplemented(msg)
