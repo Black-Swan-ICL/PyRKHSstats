@@ -1,0 +1,9 @@
+name : "OnlyHighDimensionExamples"
+schemes :
+  - 'GAMMA'
+simulation_numbers :
+  - 250
+test_levels :
+  - 0.01
+sample_sizes :
+  - 1000

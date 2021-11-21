@@ -11,13 +11,14 @@ from enum import Enum, unique
 from scipy.stats import gamma
 
 from PyRKHSstats.combinatorics_utilities import n_permute_m, \
-    ordered_combinations
+    ordered_combinations, generate_strict_permutations
 from PyRKHSstats.kernel_wrapper import KernelWrapper
 
 
 @unique
 class ImplementedHSICScheme(Enum):
     GAMMA = 'Gamma Approximation'
+    PERMUTATION = 'Permutation of Samples'
 
 
 class HSICTestingSchemeNotImplemented(Exception):
@@ -274,6 +275,46 @@ def perform_gamma_approximation_hsic_independence_testing(
     return dic
 
 
+def perform_permutation_hsic_independence_testing(
+        data_x, data_y, kernel_kx, kernel_ky, permutations=None,
+        hsic_func=compute_biased_hsic, test_level=0.01):
+
+    nb_obs, nb_dim = data_x.shape
+
+    dic = hsic_func(data_x, data_y, kernel_kx, kernel_ky)
+    hsic = dic['HSIC']
+
+    # Simulate the limit distribution by resampling
+    if permutations is None:
+        permutations = generate_strict_permutations(
+            indices_to_permute=list(range(nb_obs)),
+            nb_permutations_wanted=5000
+        )
+
+    hsic_samples = np.zeros(len(permutations))
+    for iter, permutation in enumerate(permutations):
+
+        permuted_data_x = np.zeros_like(data_x)
+        for j in range(nb_dim):
+            permuted_data_x[:, j] = data_x[permutation, j]
+
+        hsic_samples[iter] = hsic_func(
+            data_x=permuted_data_x,
+            data_y=data_y,
+            kernel_kx=kernel_kx,
+            kernel_ky=kernel_ky
+        )['HSIC']
+
+    threshold = np.quantile(hsic_samples, 1 - test_level)
+
+    dic = dict()
+    dic['Reject H0 (H0 : X _||_ Y | Z)'] = hsic > threshold
+    dic['HSIC'] = hsic  # NOT an error : here we work with HSIC itself
+    dic['Rejection threshold'] = threshold
+
+    return dic
+
+
 def perform_hsic_independence_testing(data_x, data_y, kernel_kx, kernel_ky,
                                       test_level, scheme):
     """
@@ -307,6 +348,18 @@ def perform_hsic_independence_testing(data_x, data_y, kernel_kx, kernel_ky,
     if scheme is ImplementedHSICScheme.GAMMA:
 
         test_dic = perform_gamma_approximation_hsic_independence_testing(
+            data_x=data_x,
+            data_y=data_y,
+            kernel_kx=kernel_kx,
+            kernel_ky=kernel_ky,
+            test_level=test_level
+        )
+
+        return test_dic
+
+    elif scheme is ImplementedHSICScheme.PERMUTATION:
+
+        test_dic = perform_permutation_hsic_independence_testing(
             data_x=data_x,
             data_y=data_y,
             kernel_kx=kernel_kx,
