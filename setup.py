@@ -7,7 +7,7 @@ README = (HERE / 'README.md').read_text()
 
 setup(
     name='PyRKHSstats',
-    version='1.2.0',
+    version='2.0.0',
     description='A Python package for kernel methods in Statistics/ML.',
     long_description=README,
     long_description_content_type='text/markdown',
@@ -30,7 +30,8 @@ setup(
         'scipy',
         'pandas',
         'scikit-learn',
-        'GPy'
+        'GPy',
+        'pyyaml'
     ],
     python_requires=">=3.8"
 )

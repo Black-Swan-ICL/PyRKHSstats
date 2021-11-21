@@ -33,6 +33,7 @@ resources available in the package.
 
 | Resource | Implementation Scheme | Numpy based available | PyTorch based available |
 | :---  | :--- | :----: |:----: |
+| HSIC | Resampling (permuting the x<sub>i</sub>'s but leaving the y<sub>i</sub>'s unchanged) | Yes | No |
 | HSIC | Gamma approximation | Yes | No |
 | HSCIC | N/A | Yes | Yes |
 | KCIT | Gamma approximation | Yes | No |

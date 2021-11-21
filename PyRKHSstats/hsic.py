@@ -221,6 +221,8 @@ def perform_gamma_approximation_hsic_independence_testing(
         data_x, data_y, kernel_kx, kernel_ky, hsic_func=compute_biased_hsic,
         test_level=0.01):
     """
+    Performs the HSIC unconditional independence test using the Gamma
+    approximation scheme.
 
     Parameters
     ----------
@@ -278,6 +280,36 @@ def perform_gamma_approximation_hsic_independence_testing(
 def perform_permutation_hsic_independence_testing(
         data_x, data_y, kernel_kx, kernel_ky, permutations=None,
         hsic_func=compute_biased_hsic, test_level=0.01):
+    """
+    Performs the HSIC unconditional independence test using the resampling
+    scheme (permuting the observations in :math:`\mathcal{X}` space while
+    leaving the observations in :math:`\mathcal{Y}` space unchanged).
+
+    Parameters
+    ----------
+    data_x : array_like
+        The observations in :math:`\mathcal{X}` space.
+    data_y : array_like
+        The observations in :math:`\mathcal{Y}` space.
+    kernel_kx : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{X}`.
+    kernel_ky : KernelWrapper
+        The reproducing kernel associated to the RKHS on domain
+        :math:`\mathcal{Y}`.
+    permutations : set
+        A set of permutations to use for the resampling.
+    hsic_func : callable
+        The function used to compute the HSIC.
+    test_level : float
+        The upper bound on the probability of error or type I we may accept.
+    Returns
+    -------
+    dic
+        A dictionary containing the value of HSIC, the threshold for acceptance
+        of the test, and a boolean indicating whether to reject the null
+        hypothesis of independence of x and y.
+    """
 
     nb_obs, nb_dim = data_x.shape
 
