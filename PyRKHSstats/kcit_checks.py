@@ -11,7 +11,7 @@ from collections import namedtuple
 from datetime import datetime
 
 from scipy.spatial.distance import pdist
-from scipy.stats import norm, gamma, laplace
+from scipy.stats import norm, gamma, laplace, multivariate_t, t
 from sklearn.gaussian_process.kernels import RBF
 
 from PyRKHSstats.kernel_wrapper import KernelWrapper
@@ -105,6 +105,88 @@ def generate_low_dim_not_ci_example(nb_observations):
     data_z = data_x + data_y + laplace.rvs(loc=0,
                                            scale=1,
                                            size=nb_observations).reshape(-1, 1)
+
+    # Kernels to use
+    length_scale_kx = np.median(np.abs(pdist(data_x)))
+    kernel_kx = KernelWrapper(RBF(length_scale=length_scale_kx))
+    length_scale_ky = np.median(np.abs(pdist(data_y)))
+    kernel_ky = KernelWrapper(RBF(length_scale=length_scale_ky))
+    length_scale_kz = np.median(np.abs(pdist(data_z)))
+    kernel_kz = KernelWrapper(RBF(length_scale=length_scale_kz))
+
+    # Hyperparameter - arbitrary value
+    epsilon = 0.001
+
+    example = dict()
+    example[_field_values_x] = data_x
+    example[_field_values_y] = data_y
+    example[_field_values_z] = data_z
+    example[_field_kernel_x] = kernel_kx
+    example[_field_kernel_y] = kernel_ky
+    example[_field_kernel_z] = kernel_kz
+    example[_field_regularisation_constant] = epsilon
+
+    return example
+
+# High-dimensional conditioning set example, under which CI holds true
+def generate_high_dim_ci_example(nb_observations):
+
+    data_z = multivariate_t.rvs(
+        loc=[0, 0],
+        shape=[[1, 0], [0, 1]],
+        df=2.5,
+        size=nb_observations
+    )
+    data_x = 2 * data_z[:, 0] + 3 * data_z[:, 1] + laplace.rvs(
+        loc=0,
+        scale=1,
+        size=nb_observations
+    )
+    data_x = data_x.reshape(-1, 1)
+    data_y = - 2 * data_z[:, 0] - 3 * data_z[:, 1] + laplace.rvs(
+        loc=0,
+        scale=1,
+        size=nb_observations
+    )
+    data_y = data_y.reshape(-1, 1)
+
+    # Kernels to use
+    length_scale_kx = np.median(np.abs(pdist(data_x)))
+    kernel_kx = KernelWrapper(RBF(length_scale=length_scale_kx))
+    length_scale_ky = np.median(np.abs(pdist(data_y)))
+    kernel_ky = KernelWrapper(RBF(length_scale=length_scale_ky))
+    length_scale_kz = np.median(np.abs(pdist(data_z)))
+    kernel_kz = KernelWrapper(RBF(length_scale=length_scale_kz))
+
+    # Hyperparameter - arbitrary value
+    epsilon = 0.001
+
+    example = dict()
+    example[_field_values_x] = data_x
+    example[_field_values_y] = data_y
+    example[_field_values_z] = data_z
+    example[_field_kernel_x] = kernel_kx
+    example[_field_kernel_y] = kernel_ky
+    example[_field_kernel_z] = kernel_kz
+    example[_field_regularisation_constant] = epsilon
+
+    return example
+
+# High-dimensional conditioning set example, under which CI holds true
+def generate_high_dim_not_ci_example(nb_observations):
+
+    data_x = t.rvs(loc=0, scale=1, df=2.3, size=nb_observations)
+    data_x = data_x.reshape(-1, 1)
+    data_y = t.rvs(loc=0, scale=1, df=2.3, size=nb_observations)
+    data_y = data_y.reshape(-1, 1)
+    data_z = multivariate_t.rvs(
+        loc=[0, 0],
+        shape=[[1, 0], [0, 1]],
+        df=2.5,
+        size=nb_observations
+    )
+    data_z[:, 0] += data_x[:, 0] - data_y[:, 0]
+    data_z[:, 1] += - data_x[:, 0] + data_y[:, 0]
 
     # Kernels to use
     length_scale_kx = np.median(np.abs(pdist(data_x)))
@@ -261,8 +343,16 @@ if __name__ == '__main__':
     example2 = namedtuple('id', 'regime')
     example2.id = 'Example2'
     example2.regime = 'H1'
+    example3 = namedtuple('id', 'regime')
+    example3.id = 'HighDimensionalConditioningSetWithH0True'
+    example3.regime = 'H0'
+    example4 = namedtuple('id', 'regime')
+    example4.id = 'HighDimensionalConditioningSetWithH1True'
+    example4.regime = 'H1'
     examples[example1] = generate_low_dim_ci_example
     examples[example2] = generate_low_dim_not_ci_example
+    examples[example3] = generate_high_dim_ci_example
+    examples[example4] = generate_high_dim_not_ci_example
 
     # Prepare for the collection of information about the checks
     nb_checks = (
