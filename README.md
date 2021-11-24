@@ -3,8 +3,8 @@ A Python package implementing a variety of statistical/machine learning methods
 that rely on kernels (e.g. HSIC for independence testing).
 
 ## Overview
-- Independence testing with HSIC (Hilbert-Schmidt Independence Criterion) using
-  the Gamma approximation, as introduced in
+- Independence testing with HSIC (Hilbert-Schmidt Independence Criterion), as 
+  introduced in
   [A Kernel Statistical Test of Independence](https://papers.nips.cc/paper/2007/hash/d5cfead94f5350c12c322b5b664544c1-Abstract.html), 
   A. Gretton, K. Fukumizu, C. Hui Teo, L. Song, B. Scholkopf, and A. J. Smola 
   (NIPS 2007).
