@@ -43,6 +43,7 @@ resources available in the package.
 
 ## In development
 - Two-sample testing with MMD.
+- Joint independence testing with dHSIC.
 - Goodness-of-fit testing.
 - Methods for time series models.
 - Bayesian statistical kernel methods.
