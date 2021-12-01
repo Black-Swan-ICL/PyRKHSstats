@@ -47,3 +47,4 @@ resources available in the package.
 - Goodness-of-fit testing.
 - Methods for time series models.
 - Bayesian statistical kernel methods.
+- Regression by independence maximisation.
