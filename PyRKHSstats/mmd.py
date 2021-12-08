@@ -170,7 +170,7 @@ def perform_gram_matrix_spectrum_mmd(data_x, data_y, kernel, test_level):
     mat_kernel_Gram_Kxy[0:nx, 0:nx] = mat_kernel_Gram_Kx
     mat_kernel_Gram_Kxy[nx:(2 * nx), nx:(2 * nx)] = mat_kernel_Gram_Ky
     mat_kernel_Gram_Kxy[0:nx, nx:(2 * nx)] = mat_Kxy
-    mat_kernel_Gram_Kxy[nx:(2 * nx), 0:nx] = mat_Kxy.tranpose()
+    mat_kernel_Gram_Kxy[nx:(2 * nx), 0:nx] = mat_Kxy.transpose()
 
     mat_H = np.identity(2 * nx) - (1 / (2 * nx)) * np.ones((2 * nx, 2 * nx))
     mat_centered_kernel_Gram_Kxy = mat_H @ mat_kernel_Gram_Kxy @ mat_H
@@ -187,8 +187,8 @@ def perform_gram_matrix_spectrum_mmd(data_x, data_y, kernel, test_level):
     threshold = np.quantile(draws_from_null, 1 - test_level)
 
     dic = dict()
-    dic['Reject H0 (H0 : P_X = P_Y)'] = mmd > threshold
-    dic['MMD'] = mmd
+    dic['Reject H0 (H0 : P_X = P_Y)'] = nx * mmd > threshold
+    dic['MMD'] = nx * mmd
     dic['Rejection threshold'] = threshold
     dic['Samples from simulated null'] = draws_from_null
 

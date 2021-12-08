@@ -1,7 +1,6 @@
 import os
 import yaml
 import time
-import math
 import argparse
 
 import numpy as np
@@ -11,26 +10,28 @@ import matplotlib.pyplot as plt
 from collections import namedtuple
 from datetime import datetime
 
-from scipy.stats import norm, gamma, laplace
+from scipy.spatial.distance import pdist
+from scipy.stats import norm, gamma, laplace, multivariate_normal
 from sklearn.gaussian_process.kernels import RBF
 
 from PyRKHSstats.kernel_wrapper import KernelWrapper
-from PyRKHSstats.mmd import compute_unbiased_squared_mmd, \
-    compute_biased_squared_mmd
-
+from PyRKHSstats.mmd import perform_mmd_test, ImplementedMMDSchemes
 
 _cfg_name = 'name'
-_cfg_nb_obs_x_y = 'sample_sizes_x_y'
-_cfg_nb_obs_x = 'nb_observations_x'
-_cfg_nb_obs_y = 'nb_observations_y'
+_cfg_schemes = 'schemes'
 _cfg_nb_sim = 'simulation_numbers'
+_cfg_test_levels = 'test_levels'
+_cfg_nb_obs = 'sample_sizes'
 
 
 _field_values_x = 'data_x'
 _field_values_y = 'data_y'
 _field_kernel = 'kernel'
 _field_values_mmd = 'MMD'
-_field_histogram_xlabel = 'Probability density'
+_field_rejection_threshold = 'Rejection threshold'
+_field_null_rejected = 'H0 Rejected'
+_field_histogram_xlabel = 'MMD'
+_field_histogram_ylabel = 'Probability density'
 
 
 def load_configuration(filepath):
@@ -40,52 +41,29 @@ def load_configuration(filepath):
         f.close()
 
     dic_cfg = dict()
+    dic_cfg[_cfg_schemes] = config_yaml[_cfg_schemes]
     dic_cfg[_cfg_name] = config_yaml[_cfg_name]
     dic_cfg[_cfg_nb_sim] = config_yaml[_cfg_nb_sim]
-    dic_cfg[_cfg_nb_obs_x_y] = config_yaml[_cfg_nb_obs_x_y]
+    dic_cfg[_cfg_test_levels] = config_yaml[_cfg_test_levels]
+    dic_cfg[_cfg_nb_obs] = config_yaml[_cfg_nb_obs]
 
-    return config_yaml
-
-
-def generate_fig2_left_example(nb_observations_x, nb_observations_y):
-    """
-    Corresponds to the experiment displayed on the left part of figure 2 in
-    'A Kernel Two-Sample Test', A. Gretton, K. M. Borgwardt, M. J. Rasch,
-    B. Sch\"{o}lkopf and A. Smola (JMLR #13, 2012).
-    """
-
-    data_x = norm.rvs(loc=0, scale=1, size=nb_observations_x).reshape(-1, 1)
-    data_y = norm.rvs(loc=0, scale=1, size=nb_observations_y).reshape(-1, 1)
-
-    # RBF kernels with the median heuristic
-    kernel = KernelWrapper(
-        RBF(length_scale=np.median(np.abs(data_x - data_y)))
-    )
-
-    example = dict()
-    example[_field_values_x] = data_x
-    example[_field_values_y] = data_y
-    example[_field_kernel] = kernel
-
-    return example
+    return dic_cfg
 
 
-def generate_fig2_right_example(nb_observations_x, nb_observations_y):
-    """
-    Corresponds to the experiment displayed on the right part of figure 2 in
-    'A Kernel Two-Sample Test', A. Gretton, K. M. Borgwardt, M. J. Rasch,
-    B. Sch\"{o}lkopf and A. Smola (JMLR #13, 2012).
-    """
+# Low-dimensional settings example, under which Homogeneity is true
+def generate_low_dim_homogeneity_example(nb_observations):
 
-    data_x = laplace.rvs(
-        loc=0, scale=(math.sqrt(2) / 2), size=nb_observations_x
-    ).reshape(-1, 1)
-    data_y = laplace.rvs(loc=0, scale=3, size=nb_observations_y).reshape(-1, 1)
+    data_x = laplace.rvs(loc=0,
+                         scale=1,
+                         size=nb_observations).reshape(-1, 1)
+    data_y = laplace.rvs(loc=0,
+                         scale=1,
+                         size=nb_observations).reshape(-1, 1)
 
-    # RBF kernels with the median heuristic
-    kernel = KernelWrapper(
-        RBF(length_scale=np.median(np.abs(data_x - data_y)))
-    )
+    # Kernels to use
+    pooled_sample = np.concatenate((data_x, data_y), axis=0)
+    length_scale = np.median(np.abs(pdist(pooled_sample)))
+    kernel = KernelWrapper(RBF(length_scale=length_scale))
 
     example = dict()
     example[_field_values_x] = data_x
@@ -95,26 +73,158 @@ def generate_fig2_right_example(nb_observations_x, nb_observations_y):
     return example
 
 
-def generate_example_data(example_to_run, nb_observations_x, nb_observations_y,
-                          nb_simulations, mmd_function):
+# Low-dimensional settings example, under which Homogeneity is not true
+def generate_low_dim_heterogeneity_example(nb_observations):
 
-    mmd_values = np.zeros((nb_simulations, 1))
+    data_x = norm.rvs(loc=0,
+                      scale=1,
+                      size=nb_observations).reshape(-1, 1)
+    data_y = norm.rvs(loc=2,
+                      scale=1,
+                      size=nb_observations).reshape(-1, 1)
+
+    # Kernels to use
+    pooled_sample = np.concatenate((data_x, data_y), axis=0)
+    length_scale = np.median(np.abs(pdist(pooled_sample)))
+    kernel = KernelWrapper(RBF(length_scale=length_scale))
+
+    example = dict()
+    example[_field_values_x] = data_x
+    example[_field_values_y] = data_y
+    example[_field_kernel] = kernel
+
+    return example
+
+
+# Another low-dimensional settings example, under which Homogeneity is not true
+def generate_low_dim_harder_heterogeneity_example_1(nb_observations):
+
+    data_x = norm.rvs(loc=0.5,
+                      scale=1,
+                      size=nb_observations).reshape(-1, 1)
+    data_y = norm.rvs(loc=0,
+                      scale=1,
+                      size=nb_observations).reshape(-1, 1)
+
+    # Kernels to use
+    pooled_sample = np.concatenate((data_x, data_y), axis=0)
+    length_scale = np.median(np.abs(pdist(pooled_sample)))
+    kernel = KernelWrapper(RBF(length_scale=length_scale))
+
+    example = dict()
+    example[_field_values_x] = data_x
+    example[_field_values_y] = data_y
+    example[_field_kernel] = kernel
+
+    return example
+
+
+# Another low-dimensional settings example, under which Homogeneity is not true
+def generate_low_dim_harder_heterogeneity_example_2(nb_observations):
+
+    data_x = norm.rvs(loc=0,
+                      scale=1,
+                      size=nb_observations).reshape(-1, 1)
+    data_y = norm.rvs(loc=0,
+                      scale=2,
+                      size=nb_observations).reshape(-1, 1)
+
+    # Kernels to use
+    pooled_sample = np.concatenate((data_x, data_y), axis=0)
+    length_scale = np.median(np.abs(pdist(pooled_sample)))
+    kernel = KernelWrapper(RBF(length_scale=length_scale))
+
+    example = dict()
+    example[_field_values_x] = data_x
+    example[_field_values_y] = data_y
+    example[_field_kernel] = kernel
+
+    return example
+
+
+# High-dimensional example, under which homogeneity holds true
+def generate_high_dim_homogeneity_example(nb_observations):
+
+    data_x = multivariate_normal.rvs(
+        mean=[0, 0, 0],
+        cov=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        size=nb_observations
+    )
+    data_y = multivariate_normal.rvs(
+        mean=[0, 0, 0],
+        cov=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        size=nb_observations
+    )
+
+    # Kernels to use
+    pooled_sample = np.concatenate((data_x, data_y), axis=0)
+    length_scale = np.median(np.abs(pdist(pooled_sample)))
+    kernel = KernelWrapper(RBF(length_scale=length_scale))
+
+    example = dict()
+    example[_field_values_x] = data_x
+    example[_field_values_y] = data_y
+    example[_field_kernel] = kernel
+
+    return example
+
+
+# High-dimensional example, under which homogeneity does not hold true
+def generate_high_dim_heterogeneity_example(nb_observations):
+
+    data_x = multivariate_normal.rvs(
+        mean=[0, 0, 0],
+        cov=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        size=nb_observations
+    )
+    data_y = multivariate_normal.rvs(
+        mean=[1, 1, 1],
+        cov=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        size=nb_observations
+    )
+
+    # Kernels to use
+    pooled_sample = np.concatenate((data_x, data_y), axis=0)
+    length_scale = np.median(np.abs(pdist(pooled_sample)))
+    kernel = KernelWrapper(RBF(length_scale=length_scale))
+
+    example = dict()
+    example[_field_values_x] = data_x
+    example[_field_values_y] = data_y
+    example[_field_kernel] = kernel
+
+    return example
+
+
+def generate_example_data(example_to_run, nb_observations, nb_simulations,
+                          scheme, test_level):
+
+    values_mmd = np.zeros((nb_simulations, 1))
+    values_threshold = np.zeros((nb_simulations, 1))
+    values_rejection = np.zeros((nb_simulations, 1))
 
     for i in range(nb_simulations):
 
-        example = example_to_run(
-            nb_observations_x=nb_observations_x,
-            nb_observations_y=nb_observations_y
-        )
+        example = example_to_run(nb_observations=nb_observations)
 
-        mmd_values[i, 0] = mmd_function(
+        mmd_example = perform_mmd_test(
             data_x=example[_field_values_x],
             data_y=example[_field_values_y],
-            kernel=example[_field_kernel]
-        )['MMD']
+            kernel=example[_field_kernel],
+            test_level=test_level,
+            scheme=scheme
+        )
+
+        values_mmd[i, 0] = mmd_example[_field_values_mmd]
+        values_threshold[i, 0] = mmd_example[_field_rejection_threshold]
+        values_rejection[i, 0] = (
+            1 if values_mmd[i, 0] > values_threshold[i, 0] else 0
+        )
 
     df_example = pd.DataFrame()
-    df_example[_field_values_mmd] = mmd_values[:, 0]
+    df_example[_field_values_mmd] = values_mmd[:, 0]
+    df_example[_field_rejection_threshold] = values_threshold[:, 0]
+    df_example[_field_null_rejected] = values_rejection[:, 0]
 
     return df_example
 
@@ -130,50 +240,48 @@ def generate_example_plots(data, xlabel, ylabel, title):
     return fig
 
 
-def run_example(example, id, regime, mmd_function, mmd_function_name,
-                nb_observations_x, nb_observations_y, nb_simulations, savedir):
+def run_example(example, id, regime, nb_observations, nb_simulations, scheme,
+                test_level, savedir):
 
     # Generate data for the example and compute interesting metrics
     start_time = time.time()
     df_example = generate_example_data(
         example_to_run=example,
-        nb_observations_x=nb_observations_x,
-        nb_observations_y=nb_observations_y,
+        nb_observations=nb_observations,
         nb_simulations=nb_simulations,
-        mmd_function=mmd_function
+        scheme=scheme,
+        test_level=test_level
     )
     time_taken = time.time() - start_time
-
+    nb_h0_rejected = np.sum(df_example[_field_null_rejected].values)
     # Persist the data
     csv_filename = (
-        f'MMD_{id}_{mmd_function_name}_{nb_observations_x}_observations_x_' +
-        f'{nb_observations_y}_observations_y_{nb_simulations}_simulations.csv'
+            f'MMD_{id}_{scheme.name}_scheme_{nb_observations}_observations' +
+            f'_{nb_simulations}_simulations_{test_level}_level.csv'
     )
     csv_filename = os.path.join(savedir, csv_filename)
     df_example.to_csv(csv_filename, index=False)
 
     # Draw the histogram
     title = (
-        f'Empirical {mmd_function_name} density, under {regime} with ' +
-        f'{nb_observations_x} observations for X, {nb_observations_y} ' +
-        f'observations for Y, over {nb_simulations} simulations'
+        f'Empirical MMD density, {scheme.value} scheme, under {regime} with ' +
+        f'{nb_observations} observations, over {nb_simulations} simulations.'
     )
     fig = generate_example_plots(
         data=df_example[_field_values_mmd].values,
         xlabel=_field_histogram_xlabel,
-        ylabel=mmd_function_name,
+        ylabel=_field_histogram_ylabel,
         title=title
     )
     plot_filename = (
-        f'MMD_histogram_{id}_{mmd_function_name}_{nb_observations_x}_' +
-        f'observations_x_{nb_observations_y}_observations_y_{nb_simulations}' +
-        f'_simulations_run.png'
+        f'MMD_histogram_{id}_{scheme.name}_scheme_{nb_observations}_observa' +
+        f'tions_{nb_simulations}_simulations_{test_level}_test_level_run.png'
     )
     plot_filename = os.path.join(savedir, plot_filename)
     fig.savefig(plot_filename)
     plt.close()
 
-    return time_taken
+    return time_taken, nb_h0_rejected
 
 
 if __name__ == '__main__':
@@ -184,7 +292,7 @@ if __name__ == '__main__':
     os.makedirs(root_checks_dir, exist_ok=True)
 
     parser = argparse.ArgumentParser(
-        description='Run checks for the MMD tools implemented.'
+        description='Run checks for the MMD Two-Sample Test tools implemented.'
     )
     parser.add_argument(
         'config_file',
@@ -203,64 +311,90 @@ if __name__ == '__main__':
     savedir = os.path.join(root_checks_dir, 'Runs', dic_cfg[_cfg_name])
     os.makedirs(savedir, exist_ok=True)
 
+    schemes = dic_cfg[_cfg_schemes]
+    schemes = [ImplementedMMDSchemes[elt] for elt in schemes]
     simulation_numbers = dic_cfg[_cfg_nb_sim]
-    sample_sizes_x_y = dic_cfg[_cfg_nb_obs_x_y]
+    test_levels = dic_cfg[_cfg_test_levels]
+    sample_sizes = dic_cfg[_cfg_nb_obs]
 
     examples = dict()
     example1 = namedtuple('id', 'regime')
-    example1.id = 'LeftHandFigure2_2012_JMLR_Paper'
+    example1.id = 'LowDimHomogeneity'
     example1.regime = 'H0'
+    examples[example1] = generate_low_dim_homogeneity_example
     example2 = namedtuple('id', 'regime')
-    example2.id = 'RightHandFigure2_2012_JMLR_Paper'
+    example2.id = 'LowDimHeterogeneityEasy'
     example2.regime = 'H1'
-    examples[example1] = generate_fig2_left_example
-    examples[example2] = generate_fig2_right_example
+    examples[example2] = generate_low_dim_heterogeneity_example
+    # example3 = namedtuple('id', 'regime')
+    # example3.id = 'LowDimHeterogeneityHarder1'
+    # example3.regime = 'H1'
+    # examples[example3] = generate_low_dim_harder_heterogeneity_example_1
+    # example4 = namedtuple('id', 'regime')
+    # example4.id = 'LowDimHeterogeneityHarder2'
+    # example4.regime = 'H1'
+    # examples[example4] = generate_low_dim_harder_heterogeneity_example_2
+    # example5 = namedtuple('id', 'regime')
+    # example5.id = 'HighDimHomogeneity'
+    # example5.regime = 'H0'
+    # examples[example5] = generate_high_dim_homogeneity_example
+    # example6 = namedtuple('id', 'regime')
+    # example6.id = 'HighDimHeterogeneity'
+    # example6.regime = 'H1'
+    # examples[example6] = generate_high_dim_heterogeneity_example
 
     # Prepare for the collection of information about the checks
     nb_checks = (
-            len(simulation_numbers) * len(sample_sizes_x_y)
+            len(schemes) * len(simulation_numbers) * len(sample_sizes) *
+            len(test_levels) * len(examples.keys())
     )
     arr_id = np.ndarray(shape=(nb_checks,), dtype=object)
     arr_regime = np.ndarray(shape=(nb_checks,), dtype=object)
-    arr_nb_obs_x = np.zeros(nb_checks)
-    arr_nb_obs_y = np.zeros(nb_checks)
+    arr_nb_obs = np.zeros(nb_checks)
+    arr_level = np.zeros(nb_checks)
     arr_nb_sims = np.zeros(nb_checks)
-    arr_mmd_func = np.ndarray(shape=(nb_checks,), dtype=object)
+    arr_scheme = np.ndarray(shape=(nb_checks,), dtype=object)
+    arr_h0_reject = np.zeros(nb_checks)
     arr_time = np.zeros(nb_checks)
 
     iter = 0
 
-    for nb_simulations in simulation_numbers:
-        for nb_obs_x_y in sample_sizes_x_y:
+    for scheme in schemes:
+        for nb_simulations in simulation_numbers:
+            for nb_observations in sample_sizes:
+                for test_level in test_levels:
+                    for example_setup, example in examples.items():
 
-            time_taken = run_example(
-                example=examples[example1],
-                id=example1.id,
-                regime=example1.regime,
-                mmd_function=compute_unbiased_squared_mmd,
-                mmd_function_name='MMDu^2',
-                nb_observations_x=nb_obs_x_y[_cfg_nb_obs_x],
-                nb_observations_y=nb_obs_x_y[_cfg_nb_obs_y],
-                nb_simulations=nb_simulations,
-                savedir=savedir
-            )
-            arr_id[iter] = example1.id
-            arr_regime[iter] = example1.regime
-            arr_nb_obs_x[iter] = nb_obs_x_y[_cfg_nb_obs_x]
-            arr_nb_obs_y[iter] = nb_obs_x_y[_cfg_nb_obs_y]
-            arr_nb_sims[iter] = nb_simulations
-            arr_mmd_func[iter] = 'MMDb^2'
-            arr_time[iter] = time_taken
+                        time_taken, nb_h0_rejected = run_example(
+                            example=example,
+                            id=example_setup.id,
+                            regime=example_setup.regime,
+                            nb_observations=nb_observations,
+                            nb_simulations=nb_simulations,
+                            scheme=scheme,
+                            test_level=test_level,
+                            savedir=savedir
+                        )
 
-            iter += 1
+                        arr_id[iter] = example_setup.id
+                        arr_regime[iter] = example_setup.regime
+                        arr_nb_obs[iter] = nb_observations
+                        arr_level[iter] = test_level
+                        arr_nb_sims[iter] = nb_simulations
+                        arr_scheme[iter] = scheme
+                        arr_h0_reject[iter] = nb_h0_rejected
+                        arr_time[iter] = time_taken
+
+                        iter += 1
 
     df_summary_checks = pd.DataFrame()
     df_summary_checks['Example ID'] = arr_id
     df_summary_checks['Regime'] = arr_regime
-    df_summary_checks['Sample Size for X'] = arr_nb_obs_x
-    df_summary_checks['Sample Size for Y'] = arr_nb_obs_y
-    df_summary_checks['MMD Function'] = arr_mmd_func
+    df_summary_checks['Sample Size'] = arr_nb_obs
+    df_summary_checks['Test Level'] = arr_level
     df_summary_checks['Number Simulations'] = arr_nb_sims
+    df_summary_checks['Scheme'] = arr_scheme
+    df_summary_checks['Proportion H0 Rejected'] = arr_h0_reject / arr_nb_sims
     df_summary_checks['Time Taken in seconds'] = arr_time
     # To timestamp a run
     df_summary_checks['Timestamp Completion Checks'] = str(datetime.now())
