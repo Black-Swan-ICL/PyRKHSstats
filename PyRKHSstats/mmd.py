@@ -8,6 +8,33 @@ Machine Learning Research #13, 2012).
 """
 import numpy as np
 
+from enum import Enum, unique
+
+from math import sqrt
+from scipy.stats import norm
+
+
+_field_kernel_Gram_Kx = 'mat_kernel_Gram_Kx'
+_field_kernel_Gram_Ky = 'mat_kernel_Gram_Ky'
+_field_mat_Kxy = 'mat_Kxy'
+_field_kernel_Gram_Kxy = 'mat_kernel_Gram_Kxy'
+
+
+@unique
+class ImplementedMMDSchemes(Enum):
+    SPECTRAL = 'Gram Matrix Spectrum'
+
+
+class MMDTestingSchemeNotImplemented(Exception):
+    """Raised when the user requests a scheme for MMD that is not implemented.
+    """
+
+
+class CaseNotHandled(Exception):
+    """Raised when the user attempts to use a method outside of the conditions
+    it was planned for.
+    """
+
 
 def compute_unbiased_squared_mmd(data_x, data_y, kernel):
     """
@@ -26,8 +53,11 @@ def compute_unbiased_squared_mmd(data_x, data_y, kernel):
 
     Returns
     -------
-    float
-        The unbiased estimate of the squared MMD.
+    dic
+        A dictionary containing the value of :math:`\text{MMD}_{\text{u}}^2`,
+        as well as kernel Gram matrix :math:`\text{K}_{\text{X}}`, kernel Gram
+        matrix :math:`\text{K}_{\text{Y}}` and matrix
+        :math:`\text{K}_{\text{XY}}`.
 
     Notes
     -----
@@ -39,30 +69,37 @@ def compute_unbiased_squared_mmd(data_x, data_y, kernel):
     nx = data_x.shape[0]
     ny = data_y.shape[0]
 
-    mat_Kx = kernel.compute_kernelised_gram_matrix(data_x)
-    mat_Ky = kernel.compute_kernelised_gram_matrix(data_y)
+    mat_kernel_Gram_Kx = kernel.compute_kernelised_gram_matrix(data_x)
+    mat_kernel_Gram_Ky = kernel.compute_kernelised_gram_matrix(data_y)
     mat_Kxy = kernel.compute_rectangular_kernel_matrix(data_x, data_y)
 
     if nx == ny:
 
+        # TODO should I really subtract the diagonal for K_xy ???
         unbiased_mmd = (
-                mat_Kx.sum() - np.diagonal(mat_Kx).sum() +
-                mat_Ky.sum() - np.diagonal(mat_Ky).sum() -
-                2 * (mat_Kxy.sum() - np.diagonal(mat_Kxy).sum())
+            mat_kernel_Gram_Kx.sum() - np.diagonal(mat_kernel_Gram_Kx).sum() +
+            mat_kernel_Gram_Ky.sum() - np.diagonal(mat_kernel_Gram_Ky).sum() -
+            2 * (mat_Kxy.sum() - np.diagonal(mat_Kxy).sum())
         )
         unbiased_mmd /= (nx * (nx - 1))
-
-        return unbiased_mmd
 
     else:
 
         unbiased_mmd = (
-                (mat_Kx.sum() - np.diagonal(mat_Kx).sum()) / (nx * (nx - 1)) +
-                (mat_Ky.sum() - np.diagonal(mat_Ky).sum()) / (ny * (ny - 1)) -
-                2 * mat_Kxy.sum() / (nx * ny)
+            (1 / (nx * (nx - 1))) * (mat_kernel_Gram_Kx.sum() -
+                                     np.diagonal(mat_kernel_Gram_Kx).sum()) +
+            (1 / (ny * (ny - 1))) * (mat_kernel_Gram_Ky.sum() -
+                                     np.diagonal(mat_kernel_Gram_Ky).sum()) -
+            (2 / (nx * ny)) * mat_Kxy.sum()
         )
 
-        return unbiased_mmd
+    dic = dict()
+    dic['MMD'] = unbiased_mmd
+    dic[_field_kernel_Gram_Kx] = mat_kernel_Gram_Kx
+    dic[_field_kernel_Gram_Ky] = mat_kernel_Gram_Ky
+    dic[_field_mat_Kxy] = mat_Kxy
+
+    return dic
 
 
 def compute_biased_squared_mmd(data_x, data_y, kernel):
@@ -81,20 +118,97 @@ def compute_biased_squared_mmd(data_x, data_y, kernel):
 
     Returns
     -------
-    float
-        The biased estimate of the squared MMD.
+    dic
+        A dictionary containing the value of :math:`\text{MMD}_{\text{b}}^2`,
+        as well as kernel Gram matrix :math:`\text{K}_{\text{X}}`, kernel Gram
+        matrix :math:`\text{K}_{\text{Y}}` and matrix
+        :math:`\text{K}_{\text{XY}}`.
     """
     nx = data_x.shape[0]
     ny = data_y.shape[0]
 
-    mat_Kx = kernel.compute_kernelised_gram_matrix(data_x)
-    mat_Ky = kernel.compute_kernelised_gram_matrix(data_y)
+    mat_kernel_Gram_Kx = kernel.compute_kernelised_gram_matrix(data_x)
+    mat_kernel_Gram_Ky = kernel.compute_kernelised_gram_matrix(data_y)
     mat_Kxy = kernel.compute_rectangular_kernel_matrix(data_x, data_y)
 
     biased_mmd = (
-            mat_Kx.sum() / (nx * nx) +
-            mat_Ky.sum() / (ny * ny) -
+            mat_kernel_Gram_Kx.sum() / (nx * nx) +
+            mat_kernel_Gram_Ky.sum() / (ny * ny) -
             2 * mat_Kxy.sum() / (nx * ny)
     )
 
-    return biased_mmd
+    dic = dict()
+    dic['MMD'] = biased_mmd
+    dic[_field_kernel_Gram_Kx] = mat_kernel_Gram_Kx
+    dic[_field_kernel_Gram_Ky] = mat_kernel_Gram_Ky
+    dic[_field_mat_Kxy] = mat_Kxy
+
+    return dic
+
+
+def perform_gram_matrix_spectrum_mmd(data_x, data_y, kernel, test_level):
+
+    mmd_dic = compute_biased_squared_mmd(
+        data_x=data_x,
+        data_y=data_y,
+        kernel=kernel
+    )
+    mmd = mmd_dic['MMD']
+    mat_kernel_Gram_Kx = mmd_dic[_field_kernel_Gram_Kx]
+    mat_kernel_Gram_Ky = mmd_dic[_field_kernel_Gram_Ky]
+    mat_Kxy = mmd_dic[_field_mat_Kxy]
+
+    nx = mat_kernel_Gram_Kx.shape[0]
+    ny = mat_kernel_Gram_Ky.shape[0]
+
+    if nx != ny:
+
+        msg = 'This method is designed for equal sample sizes for X and Y.'
+        raise CaseNotHandled(msg)
+
+    mat_kernel_Gram_Kxy = np.zeros((2 * nx, 2 * nx))
+    mat_kernel_Gram_Kxy[0:nx, 0:nx] = mat_kernel_Gram_Kx
+    mat_kernel_Gram_Kxy[nx:(2 * nx), nx:(2 * nx)] = mat_kernel_Gram_Ky
+    mat_kernel_Gram_Kxy[0:nx, nx:(2 * nx)] = mat_Kxy
+    mat_kernel_Gram_Kxy[nx:(2 * nx), 0:nx] = mat_Kxy.tranpose()
+
+    mat_H = np.identity(2 * nx) - (1 / (2 * nx)) * np.ones((2 * nx, 2 * nx))
+    mat_centered_kernel_Gram_Kxy = mat_H @ mat_kernel_Gram_Kxy @ mat_H
+
+    # Simulating draws from the limit distribution
+    eigenvalues, _ = np.linalg.eig(mat_centered_kernel_Gram_Kxy)
+    eigenvalues /= (2 * nx)
+    gaussians = sqrt(2) * norm.rvs(loc=0, scale=1, size=(2 * nx))
+    draws_from_null = np.dot(
+        eigenvalues, gaussians ** 2
+    )
+
+    # Compute the empirical quantile
+    threshold = np.quantile(draws_from_null, 1 - test_level)
+
+    dic = dict()
+    dic['Reject H0 (H0 : P_X = P_Y)'] = mmd > threshold
+    dic['MMD'] = mmd
+    dic['Rejection threshold'] = threshold
+    dic['Samples from simulated null'] = draws_from_null
+
+    return dic
+
+
+def perform_mmd_test(data_x, data_y, kernel, test_level, scheme):
+
+    if scheme is ImplementedMMDSchemes.SPECTRAL:
+
+        test_dic = perform_gram_matrix_spectrum_mmd(
+            data_x=data_x,
+            data_y=data_y,
+            kernel=kernel,
+            test_level=test_level
+        )
+
+        return test_dic
+
+    else:
+
+        msg = f"Scheme '{scheme}' not implemented for the MMD two-sample test."
+        raise MMDTestingSchemeNotImplemented(msg)

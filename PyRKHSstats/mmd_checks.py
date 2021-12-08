@@ -15,7 +15,8 @@ from scipy.stats import norm, gamma, laplace
 from sklearn.gaussian_process.kernels import RBF
 
 from PyRKHSstats.kernel_wrapper import KernelWrapper
-from PyRKHSstats.mmd import compute_unbiased_squared_mmd, compute_biased_squared_mmd
+from PyRKHSstats.mmd import compute_unbiased_squared_mmd, \
+    compute_biased_squared_mmd
 
 
 _cfg_name = 'name'
@@ -110,7 +111,7 @@ def generate_example_data(example_to_run, nb_observations_x, nb_observations_y,
             data_x=example[_field_values_x],
             data_y=example[_field_values_y],
             kernel=example[_field_kernel]
-        )
+        )['MMD']
 
     df_example = pd.DataFrame()
     df_example[_field_values_mmd] = mmd_values[:, 0]
@@ -175,7 +176,6 @@ def run_example(example, id, regime, mmd_function, mmd_function_name,
     return time_taken
 
 
-
 if __name__ == '__main__':
 
     root_checks_dir = os.path.join(
@@ -237,8 +237,8 @@ if __name__ == '__main__':
                 example=examples[example1],
                 id=example1.id,
                 regime=example1.regime,
-                mmd_function=compute_biased_squared_mmd,
-                mmd_function_name='MMDb^2',
+                mmd_function=compute_unbiased_squared_mmd,
+                mmd_function_name='MMDu^2',
                 nb_observations_x=nb_obs_x_y[_cfg_nb_obs_x],
                 nb_observations_y=nb_obs_x_y[_cfg_nb_obs_y],
                 nb_simulations=nb_simulations,
