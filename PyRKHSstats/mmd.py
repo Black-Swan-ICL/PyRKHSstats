@@ -176,7 +176,7 @@ def perform_gram_matrix_spectrum_mmd(data_x, data_y, kernel, test_level):
     mat_centered_kernel_Gram_Kxy = mat_H @ mat_kernel_Gram_Kxy @ mat_H
 
     # Simulating draws from the limit distribution
-    eigenvalues, _ = np.linalg.eig(mat_centered_kernel_Gram_Kxy)
+    eigenvalues = np.linalg.eigvalsh(mat_centered_kernel_Gram_Kxy)
     eigenvalues /= (2 * nx)
     gaussians = sqrt(2) * norm.rvs(loc=0, scale=1, size=(2 * nx))
     draws_from_null = np.dot(
