@@ -47,6 +47,7 @@ resources available in the package.
 | KCIT | Gamma approximation | Yes | No |
 | KCIT | Monte Carlo simulation (weighted sum of &chi;<sup>2</sup> random variables)| Yes | No |
 | MMD | Gram matrix spectrum | Yes | No |
+| MMD | Permutation | Yes | No |
 
 <br>
 

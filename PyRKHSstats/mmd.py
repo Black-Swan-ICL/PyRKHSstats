@@ -6,6 +6,9 @@ Sriperumbudur (NIPS #22, 2009) and 'A Kernel Two-Sample Test', A. Gretton,
 K. M. Borgwardt, M. J. Rasch, B. Sch\"{o}lkopf and A. Smola (Journal of
 Machine Learning Research #13, 2012).
 """
+import copy
+import itertools
+
 import numpy as np
 
 from enum import Enum, unique
@@ -23,6 +26,7 @@ _field_kernel_Gram_Kxy = 'mat_kernel_Gram_Kxy'
 @unique
 class ImplementedMMDSchemes(Enum):
     SPECTRAL = 'Gram Matrix Spectrum'
+    PERMUTATION = 'Permutation'
 
 
 class MMDTestingSchemeNotImplemented(Exception):
@@ -146,6 +150,64 @@ def compute_biased_squared_mmd(data_x, data_y, kernel):
     return dic
 
 
+def perform_permutation_mmd(data_x, data_y, kernel, test_level,
+                            nb_permutations=1000):
+
+    mmd_dic = compute_biased_squared_mmd(
+        data_x=data_x,
+        data_y=data_y,
+        kernel=kernel
+    )
+    mmd = mmd_dic['MMD']
+    mat_kernel_Gram_Kx = mmd_dic[_field_kernel_Gram_Kx]
+    mat_kernel_Gram_Ky = mmd_dic[_field_kernel_Gram_Ky]
+    mat_Kxy = mmd_dic[_field_mat_Kxy]
+
+    nx = mat_kernel_Gram_Kx.shape[0]
+    ny = mat_kernel_Gram_Ky.shape[0]
+
+    if nx != ny:
+
+        msg = 'This method is designed for equal sample sizes for X and Y.'
+        raise CaseNotHandled(msg)
+
+    mat_kernel_Gram_Kxy = np.zeros((2 * nx, 2 * nx))
+    mat_kernel_Gram_Kxy[0:nx, 0:nx] = mat_kernel_Gram_Kx
+    mat_kernel_Gram_Kxy[nx:(2 * nx), nx:(2 * nx)] = mat_kernel_Gram_Ky
+    mat_kernel_Gram_Kxy[0:nx, nx:(2 * nx)] = mat_Kxy
+    mat_kernel_Gram_Kxy[nx:(2 * nx), 0:nx] = mat_Kxy.transpose()
+
+    draws_from_null = np.zeros(nb_permutations)
+    permutation_generator = itertools.permutations(list(range(2 * nx)))
+    for i in range(nb_permutations):
+
+        current_permutation = next(permutation_generator)
+        permuted_matrix = np.zeros_like(mat_kernel_Gram_Kxy)
+        for j in range(2 * nx):
+            for k in range(2 * nx):
+                permuted_matrix[j, k] = mat_kernel_Gram_Kxy[
+                    current_permutation[j], current_permutation[k]
+                ]
+
+        draws_from_null[i] = (
+            np.sum(permuted_matrix[0:nx, 0:nx]) +
+            np.sum(permuted_matrix[nx:(2 * nx), nx:(2 * nx)]) -
+            np.sum(permuted_matrix[0:nx, nx:(2 * nx)]) -
+            np.sum(permuted_matrix[nx:(2 * nx), 0:nx])
+        ) / (nx * nx)
+
+    # Compute the empirical quantile
+    threshold = np.quantile(draws_from_null, 1 - test_level)
+
+    dic = dict()
+    dic['Reject H0 (H0 : P_X = P_Y)'] = mmd > threshold
+    dic['MMD'] = mmd
+    dic['Rejection threshold'] = threshold
+    dic['Samples from simulated null'] = draws_from_null
+
+    return dic
+
+
 def perform_gram_matrix_spectrum_mmd(data_x, data_y, kernel, test_level):
 
     mmd_dic = compute_biased_squared_mmd(
@@ -200,6 +262,17 @@ def perform_mmd_test(data_x, data_y, kernel, test_level, scheme):
     if scheme is ImplementedMMDSchemes.SPECTRAL:
 
         test_dic = perform_gram_matrix_spectrum_mmd(
+            data_x=data_x,
+            data_y=data_y,
+            kernel=kernel,
+            test_level=test_level
+        )
+
+        return test_dic
+
+    elif scheme is ImplementedMMDSchemes.PERMUTATION:
+
+        test_dic = perform_permutation_mmd(
             data_x=data_x,
             data_y=data_y,
             kernel=kernel,

@@ -1,0 +1,9 @@
+name : "Checks-Permutation"
+schemes :
+  - 'PERMUTATION'
+simulation_numbers :
+  - 1
+test_levels :
+  - 0.01
+sample_sizes :
+  - 200

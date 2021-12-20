@@ -79,7 +79,7 @@ def generate_low_dim_heterogeneity_example(nb_observations):
     data_x = norm.rvs(loc=0,
                       scale=1,
                       size=nb_observations).reshape(-1, 1)
-    data_y = norm.rvs(loc=2,
+    data_y = norm.rvs(loc=0.5,
                       scale=1,
                       size=nb_observations).reshape(-1, 1)
 
