@@ -151,7 +151,7 @@ def compute_biased_squared_mmd(data_x, data_y, kernel):
 
 
 def perform_permutation_mmd(data_x, data_y, kernel, test_level,
-                            nb_permutations=1000):
+                            nb_permutations=5000):
 
     mmd_dic = compute_biased_squared_mmd(
         data_x=data_x,
@@ -178,17 +178,9 @@ def perform_permutation_mmd(data_x, data_y, kernel, test_level,
     mat_kernel_Gram_Kxy[nx:(2 * nx), 0:nx] = mat_Kxy.transpose()
 
     draws_from_null = np.zeros(nb_permutations)
-    permutation_generator = itertools.permutations(list(range(2 * nx)))
+    permuted_matrix = copy.deepcopy(mat_kernel_Gram_Kxy)
     for i in range(nb_permutations):
-
-        current_permutation = next(permutation_generator)
-        permuted_matrix = np.zeros_like(mat_kernel_Gram_Kxy)
-        for j in range(2 * nx):
-            for k in range(2 * nx):
-                permuted_matrix[j, k] = mat_kernel_Gram_Kxy[
-                    current_permutation[j], current_permutation[k]
-                ]
-
+        np.random.shuffle(permuted_matrix)
         draws_from_null[i] = (
             np.sum(permuted_matrix[0:nx, 0:nx]) +
             np.sum(permuted_matrix[nx:(2 * nx), nx:(2 * nx)]) -
@@ -208,7 +200,8 @@ def perform_permutation_mmd(data_x, data_y, kernel, test_level,
     return dic
 
 
-def perform_gram_matrix_spectrum_mmd(data_x, data_y, kernel, test_level):
+def perform_gram_matrix_spectrum_mmd(data_x, data_y, kernel, test_level,
+                                     nb_simulations=5000):
 
     mmd_dic = compute_biased_squared_mmd(
         data_x=data_x,
@@ -240,10 +233,11 @@ def perform_gram_matrix_spectrum_mmd(data_x, data_y, kernel, test_level):
     # Simulating draws from the limit distribution
     eigenvalues = np.linalg.eigvalsh(mat_centered_kernel_Gram_Kxy)
     eigenvalues /= (2 * nx)
-    gaussians = sqrt(2) * norm.rvs(loc=0, scale=1, size=(2 * nx))
-    draws_from_null = np.dot(
-        eigenvalues, gaussians ** 2
-    )
+    nb_eigenvalues = eigenvalues.shape[0]
+    draws_from_null = np.zeros((nb_simulations, 1))
+    for i in range(nb_simulations):
+        gaussians = sqrt(2) * norm.rvs(loc=0, scale=1, size=nb_eigenvalues)
+        draws_from_null[i, 0] = np.dot(eigenvalues, gaussians ** 2)
 
     # Compute the empirical quantile
     threshold = np.quantile(draws_from_null, 1 - test_level)
