@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 from collections import namedtuple
 from datetime import datetime
+from math import sqrt
 
 from scipy.spatial.distance import pdist
 from scipy.stats import norm, gamma, laplace, multivariate_normal
@@ -74,7 +75,7 @@ def generate_low_dim_homogeneity_example(nb_observations):
 
 
 # Low-dimensional settings example, under which Homogeneity is not true
-def generate_low_dim_heterogeneity_example(nb_observations):
+def generate_low_dim_heterogeneity_different_means_example(nb_observations):
 
     data_x = norm.rvs(loc=0,
                       scale=1,
@@ -97,13 +98,14 @@ def generate_low_dim_heterogeneity_example(nb_observations):
 
 
 # Another low-dimensional settings example, under which Homogeneity is not true
-def generate_low_dim_harder_heterogeneity_example_1(nb_observations):
+def generate_low_dim_heterogeneity_different_variances_example(
+        nb_observations):
 
-    data_x = norm.rvs(loc=0.5,
+    data_x = norm.rvs(loc=0,
                       scale=1,
                       size=nb_observations).reshape(-1, 1)
     data_y = norm.rvs(loc=0,
-                      scale=1,
+                      scale=1.5,
                       size=nb_observations).reshape(-1, 1)
 
     # Kernels to use
@@ -120,14 +122,15 @@ def generate_low_dim_harder_heterogeneity_example_1(nb_observations):
 
 
 # Another low-dimensional settings example, under which Homogeneity is not true
-def generate_low_dim_harder_heterogeneity_example_2(nb_observations):
+def generate_low_dim_harder_heterogeneity_same_means_variances(
+        nb_observations):
 
     data_x = norm.rvs(loc=0,
                       scale=1,
                       size=nb_observations).reshape(-1, 1)
-    data_y = norm.rvs(loc=0,
-                      scale=2,
-                      size=nb_observations).reshape(-1, 1)
+    data_y = laplace.rvs(loc=0,
+                         scale=(1 / sqrt(2)),
+                         size=nb_observations).reshape(-1, 1)
 
     # Kernels to use
     pooled_sample = np.concatenate((data_x, data_y), axis=0)
@@ -178,7 +181,7 @@ def generate_high_dim_heterogeneity_example(nb_observations):
         size=nb_observations
     )
     data_y = multivariate_normal.rvs(
-        mean=[1, 1, 1],
+        mean=[0.5, 0.5, 0.5],
         cov=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
         size=nb_observations
     )
@@ -323,25 +326,27 @@ if __name__ == '__main__':
     example1.regime = 'H0'
     examples[example1] = generate_low_dim_homogeneity_example
     example2 = namedtuple('id', 'regime')
-    example2.id = 'LowDimHeterogeneityEasy'
+    example2.id = 'LowDimHeterogeneityDifferentMeansSameVariances'
     example2.regime = 'H1'
-    examples[example2] = generate_low_dim_heterogeneity_example
-    # example3 = namedtuple('id', 'regime')
-    # example3.id = 'LowDimHeterogeneityHarder1'
-    # example3.regime = 'H1'
-    # examples[example3] = generate_low_dim_harder_heterogeneity_example_1
-    # example4 = namedtuple('id', 'regime')
-    # example4.id = 'LowDimHeterogeneityHarder2'
-    # example4.regime = 'H1'
-    # examples[example4] = generate_low_dim_harder_heterogeneity_example_2
-    # example5 = namedtuple('id', 'regime')
-    # example5.id = 'HighDimHomogeneity'
-    # example5.regime = 'H0'
-    # examples[example5] = generate_high_dim_homogeneity_example
-    # example6 = namedtuple('id', 'regime')
-    # example6.id = 'HighDimHeterogeneity'
-    # example6.regime = 'H1'
-    # examples[example6] = generate_high_dim_heterogeneity_example
+    examples[example2] = generate_low_dim_heterogeneity_different_means_example
+    example3 = namedtuple('id', 'regime')
+    example3.id = 'LowDimHeterogeneitySameMeansDifferentVariances'
+    example3.regime = 'H1'
+    examples[example3] = \
+        generate_low_dim_heterogeneity_different_variances_example
+    example4 = namedtuple('id', 'regime')
+    example4.id = 'LowDimHeterogeneitySameMeansVariances'
+    example4.regime = 'H1'
+    examples[example4] = \
+        generate_low_dim_harder_heterogeneity_same_means_variances
+    example5 = namedtuple('id', 'regime')
+    example5.id = 'HighDimHomogeneity'
+    example5.regime = 'H0'
+    examples[example5] = generate_high_dim_homogeneity_example
+    example6 = namedtuple('id', 'regime')
+    example6.id = 'HighDimHeterogeneity'
+    example6.regime = 'H1'
+    examples[example6] = generate_high_dim_heterogeneity_example
 
     # Prepare for the collection of information about the checks
     nb_checks = (
