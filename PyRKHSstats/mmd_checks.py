@@ -172,6 +172,7 @@ def generate_high_dim_homogeneity_example(nb_observations):
     return example
 
 
+# TODO loss of power in high dimensions. Try with a better chosen kernel ?
 # High-dimensional example, under which homogeneity does not hold true
 def generate_high_dim_heterogeneity_example(nb_observations):
 
