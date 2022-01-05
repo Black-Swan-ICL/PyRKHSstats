@@ -264,16 +264,16 @@ def perform_mmd_test(data_x, data_y, kernel, test_level, scheme):
 
         return test_dic
 
-    elif scheme is ImplementedMMDSchemes.PERMUTATION:
-
-        test_dic = perform_permutation_mmd(
-            data_x=data_x,
-            data_y=data_y,
-            kernel=kernel,
-            test_level=test_level
-        )
-
-        return test_dic
+    # elif scheme is ImplementedMMDSchemes.PERMUTATION:
+    #
+    #     test_dic = perform_permutation_mmd(
+    #         data_x=data_x,
+    #         data_y=data_y,
+    #         kernel=kernel,
+    #         test_level=test_level
+    #     )
+    #
+    #     return test_dic
 
     else:
 

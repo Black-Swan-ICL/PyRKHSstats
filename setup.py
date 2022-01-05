@@ -7,7 +7,7 @@ README = (HERE / 'README.md').read_text()
 
 setup(
     name='PyRKHSstats',
-    version='2.0.0',
+    version='2.1.0',
     description='A Python package for kernel methods in Statistics/ML.',
     long_description=README,
     long_description_content_type='text/markdown',
