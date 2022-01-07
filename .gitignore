@@ -135,5 +135,7 @@ dmypy.json
 PyRKHSstats/checks/HSIC/Runs/
 PyRKHSstats/checks/KCIT/Runs/
 PyRKHSstats/checks/MMD/Runs/
-
-
+# HSCIC is a bit special
+PyRKHSstats/checks/HSCIC/PlotsNeurIPS2020
+PyRKHSstats/checks/HSCIC/WithPyTorch/Figure3a_pytorch.png
+PyRKHSstats/checks/HSCIC/WithPyTorch/Figure3b_pytorch.png

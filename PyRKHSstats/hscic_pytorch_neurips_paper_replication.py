@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
@@ -11,7 +13,7 @@ from PyRKHSstats.hscic_pytorch import compute_mat_W, compute_vec_k_Z_in_z, \
     compute_hscic
 
 
-def run_simulation(sample_size=500, produce_plots=False):
+def run_simulation(savedir, sample_size=500, produce_plots=False):
 
     # to be able to replicate the figures in the article, need to divide by
     # the sample size
@@ -47,7 +49,8 @@ def run_simulation(sample_size=500, produce_plots=False):
         plt.xlabel('z')
         plt.ylabel('x, y')
         plt.title('Simulated Data - Additive Noise')
-        plt.savefig('Figure3a_pytorch.png')
+        plot_filename = os.path.join(savedir, 'Figure3a_pytorch.png')
+        plt.savefig(plot_filename)
         plt.close()
 
     # Figure 3 (b)
@@ -147,13 +150,23 @@ def run_simulation(sample_size=500, produce_plots=False):
         plt.legend(loc='best')
         plt.xlabel('z')
         plt.title('HSCIC values')
-        plt.savefig('Figure3b_pytorch.png')
+        plot_filename = os.path.join(savedir, 'Figure3b_pytorch.png')
+        plt.savefig(plot_filename)
         plt.close()
 
 
 if __name__ == '__main__':
 
+    root_checks_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'checks', 'HSCIC'
+    )
+    os.makedirs(root_checks_dir, exist_ok=True)
+
     # Reproducing the figures from 'A Measure-Theoretic Approach to Kernel
     # Conditional Mean Embedding' (J. Park, K.Muandet arXiv:2002.03689v8).
     np.random.seed(22)
-    run_simulation(sample_size=500, produce_plots=True)
+    run_simulation(
+        savedir=root_checks_dir,
+        sample_size=500,
+        produce_plots=True
+    )

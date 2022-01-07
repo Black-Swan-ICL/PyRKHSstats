@@ -1,20 +1,32 @@
+import os
+
 import time
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from hscic_checks import run_simulation as run_simulation_numpy
-from hscic_pytorch_checks import run_simulation as run_simulation_pytorch
+from hscic_neurips_paper_replication import run_simulation as \
+    run_simulation_numpy
+from hscic_pytorch_neurips_paper_replication import run_simulation as \
+    run_simulation_pytorch
 
 
 if __name__== '__main__':
+
+    root_checks_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'checks', 'HSCIC'
+    )
+    os.makedirs(root_checks_dir, exist_ok=True)
 
     sample_sizes = np.arange(500, 10250, 250)
 
     time_pytorch = []
     for sample_size in sample_sizes:
         start = time.time()
-        run_simulation_pytorch(sample_size=sample_size)
+        run_simulation_pytorch(
+            savedir=root_checks_dir,
+            sample_size=sample_size
+        )
         end = time.time()
         time_taken = end - start
         time_pytorch.append(time_taken)
@@ -23,7 +35,10 @@ if __name__== '__main__':
     time_numpy = []
     for sample_size in sample_sizes:
         start = time.time()
-        run_simulation_numpy(sample_size=sample_size)
+        run_simulation_numpy(
+            savedir=root_checks_dir,
+            sample_size=sample_size
+        )
         end = time.time()
         time_taken = end - start
         time_numpy.append(time_taken)
@@ -35,7 +50,8 @@ if __name__== '__main__':
         },
         index=sample_sizes
     )
-    df.to_csv('comparison_times_hscic.csv', sep=';')
+    csv_filename = os.path.join(root_checks_dir, 'comparison_times_hscic.csv')
+    df.to_csv(csv_filename, sep=';')
 
     plt.figure(figsize=(16, 12))
     df.plot()
@@ -43,6 +59,7 @@ if __name__== '__main__':
     plt.xlabel('Sample size')
     plt.ylabel('Time taken in seconds')
     plt.title('Time taken by the HSCIC simulation for different sample sizes')
-    plt.savefig('comparison_times_hscic.png')
+    plot_filename = os.path.join(root_checks_dir, 'comparison_times_hscic.png')
+    plt.savefig(plot_filename)
 
 
