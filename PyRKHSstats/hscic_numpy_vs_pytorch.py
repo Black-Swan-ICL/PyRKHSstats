@@ -11,7 +11,7 @@ from hscic_pytorch_neurips_paper_replication import run_simulation as \
     run_simulation_pytorch
 
 
-if __name__== '__main__':
+if __name__ == '__main__':
 
     root_checks_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), 'checks', 'HSCIC'

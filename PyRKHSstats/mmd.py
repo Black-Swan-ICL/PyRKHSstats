@@ -7,7 +7,6 @@ K. M. Borgwardt, M. J. Rasch, B. Sch\"{o}lkopf and A. Smola (Journal of
 Machine Learning Research #13, 2012).
 """
 import copy
-import itertools
 
 import numpy as np
 
