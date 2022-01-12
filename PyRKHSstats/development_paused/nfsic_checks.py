@@ -1,4 +1,3 @@
-import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -7,7 +6,7 @@ from scipy.stats import chi2
 from sklearn.gaussian_process.kernels import RBF
 
 from PyRKHSstats.kernel_wrapper import KernelWrapper
-from PyRKHSstats.fsic import normalised_fsic
+from PyRKHSstats.development_paused.fsic import normalised_fsic
 
 
 def compute_median_distances(x):
